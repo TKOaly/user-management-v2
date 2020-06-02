@@ -2,9 +2,10 @@ import React from 'react'
 import { UserServiceUser } from '../../services/tkoUserService'
 import { dispatch } from '../../actionDispatcher'
 import { changePageAction } from '../../actions'
+import { EditUser } from '../../stores/userEditStore'
 
 export interface EditUserModalProps {
-  user?: UserServiceUser,
+  user?: EditUser,
   authorizedUser: UserServiceUser
 }
 
@@ -83,14 +84,32 @@ const EditUserForm = ({ user, authorizedUser }: EditUserModalProps) => {
       <div className="field">
         <label className="label">Role</label>
         <div className="control">
-          <input className="input" type="text" disabled={resolveDisabled('role')} value={user.role} placeholder="Text input" />
+          <div className="select">
+            <select name="role" id="UserRole">
+              <option value="kayttaja" selected={user.role === 'kayttaja'}>User</option>
+              <option value="virkailija" selected={user.role === 'virkailija'}>Officer</option>
+              <option value="tenttiarkistovirkailija" selected={user.role === 'tenttiarkistovirkailija'}>Exam archive officer</option>
+              <option value="jasenvirkailija" selected={user.role === 'jasenvirkailija'}>Membership officer</option>
+              <option value="yllapitaja" selected={user.role === 'yllapitaja'}>Administrator</option>
+            </select>
+          </div>
         </div>
+
       </div>
 
       <div className="field">
         <label className="label">Membership</label>
         <div className="control">
-          <input className="input" type="text" disabled={resolveDisabled('membership')} value={user.membership} placeholder="Text input" />
+          <div className="select">
+            <select name="membershup" id="UserMembership" disabled={resolveDisabled('membership')}>
+              <option value="ei-jasen" selected={user.membership === 'ei-jasen'}>Non-member</option>
+              <option value="erotettu" selected={user.membership === 'erotettu'}>Dismissed</option>
+              <option value="ulkojasen" selected={user.membership === 'ulkojasen'}>Outside member</option>
+              <option value="jasen" selected={user.membership === 'jasen'}>Member</option>
+              <option value="kannatusjasen" selected={user.membership === 'kannatusjasen'}>Supporting member</option>
+              <option value="kunniajasen" selected={user.membership === 'kunniajasen'}>Honorary member</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -98,6 +117,16 @@ const EditUserForm = ({ user, authorizedUser }: EditUserModalProps) => {
         <label className="label">Date created</label>
         <div className="control">
           <input className="input" disabled={true} type="text" value={new Date(user.createdAt).toLocaleString()} placeholder="Text input" />
+        </div>
+      </div>
+
+
+      <div className="box">
+        <div className="media-content">
+          <div className="content">
+            <p><strong>Payment</strong></p>
+            <p>{user.payment ? `Users payment valid until ${user.payment.valid_until}` : 'User has no valid payment.'}</p>
+          </div>
         </div>
       </div>
     </>

@@ -8,12 +8,18 @@ import UsersList, { UserListProps } from './components/UsersList'
 import { onPath, watchPageChanges } from '../router'
 import EditUserModal from './components/EditUserModal'
 import { pageNavigationStore } from '../stores/pageNavigationStore'
+import { userEditStore, EditUser } from '../stores/userEditStore'
+import { dispatch } from '../actionDispatcher'
+import { setEditUserAction } from '../actions'
 
 export interface AppProps {
   user: UserServiceUser
   userSearchState: UserListProps
   navigation: {
     path: string
+  }
+  userEditState: {
+    editUser: EditUser
   }
 }
 
@@ -23,7 +29,7 @@ const adminTools = (users: UserServiceUser[]) =>
     <UsersList users={users} />
   </>
 
-const App = ({ user, userSearchState, navigation }: AppProps) => {
+const App = ({ user, userSearchState, navigation, userEditState }: AppProps) => {
   const pathCheck = onPath(navigation.path)
 
   return (
@@ -31,10 +37,14 @@ const App = ({ user, userSearchState, navigation }: AppProps) => {
       <NavBar user={user} />
       <div className="container">
         {user.role !== 'kayttaja' && adminTools(userSearchState.users)}
-        {pathCheck('/edit/user/me', () => <EditUserModal user={user} authorizedUser={user} />)}
-        {pathCheck('/edit/user/:id<\\d+>', ({ id }: { id: string }) =>
-          <EditUserModal user={userSearchState.users.find(u => u.id === parseInt(id))} authorizedUser={user} />
-        )}
+        {pathCheck('/edit/user/me', () => {
+          if (!userEditState.editUser || userEditState.editUser.id !== user.id) {
+            dispatch(setEditUserAction, user)
+            return null
+          }
+          return <EditUserModal user={userEditState.editUser} authorizedUser={user} />
+        })}
+        {pathCheck('/edit/user/:id<\\d+>', ({ id }: { id: string }) => <EditUserModal user={userEditState.editUser} authorizedUser={user} />)}
       </div>
     </>
   )
@@ -43,17 +53,20 @@ const App = ({ user, userSearchState, navigation }: AppProps) => {
 export default (initialState: AppProps) => {
   const userSearchStoreP = userSearchStore(initialState.userSearchState)
   const pageNavigationStoreP = pageNavigationStore(initialState.navigation)
+  const userEditStoreP = userEditStore(initialState.userEditState)
 
   watchPageChanges()
 
   return Bacon.combineTemplate({
     userSearchStoreState: userSearchStoreP,
-    pageNavigationState: pageNavigationStoreP
-  }).map(({ userSearchStoreState, pageNavigationState }) => {
+    pageNavigationState: pageNavigationStoreP,
+    userEditState: userEditStoreP
+  }).map(({ userSearchStoreState, pageNavigationState, userEditState }) => {
     const state: AppProps = {
       ...initialState,
       userSearchState: userSearchStoreState,
-      navigation: pageNavigationState
+      navigation: pageNavigationState,
+      userEditState
     }
 
     return <App { ...state } />
