@@ -3,6 +3,7 @@ import { actionStream } from '../actionDispatcher'
 import { userSearchFieldChangedAction } from '../actions'
 import { searchUsers, UserServiceUser, conditionalUserFetch } from '../services/tkoUserService'
 import { UserListProps } from '../features/components/UsersList'
+import { Nothing } from 'purify-ts'
 
 export const userSearchStore = (initialProps: UserListProps) => {
   const userSearchFieldChangedS = actionStream(userSearchFieldChangedAction)
@@ -19,7 +20,7 @@ export const userSearchStore = (initialProps: UserListProps) => {
 
 const doCondSearch = (additionalSearchTerm: string) => (cond: string) =>
   Bacon.fromPromise(
-    conditionalUserFetch(cond)
+    conditionalUserFetch(cond, Nothing)
       .then(({ payload }) => payload)
       .then(res => res.filter(applySearchFilter(additionalSearchTerm)))
   )
@@ -45,14 +46,14 @@ const doSearch = (searchTerm: string) => {
         return withSearchTerm('revoked')
       default:
         return Bacon.fromPromise(
-          searchUsers(searchTerm)
+          searchUsers(searchTerm, Nothing)
             .then(({ payload }) => payload)
         )
     }
   }
 
   return Bacon.fromPromise(
-    searchUsers(searchTerm)
+    searchUsers(searchTerm, Nothing)
       .then(({ payload }) => payload)
   )
 }

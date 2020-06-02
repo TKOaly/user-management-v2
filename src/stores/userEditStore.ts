@@ -2,6 +2,7 @@ import * as Bacon from 'baconjs'
 import { UserServiceUser, Payment, getUserPayment } from '../services/tkoUserService'
 import { actionStream, dispatch } from '../actionDispatcher'
 import { modifyUserEditFormDataAction, setEditUserAction, changePageAction } from '../actions'
+import { Nothing } from 'purify-ts'
 
 export type EditUser = UserServiceUser & 
 {
@@ -25,5 +26,5 @@ export const userEditStore = (initialState: { editUser: EditUser | null }) => {
 }
 
 const fetchPayments = (userId: number) =>
-  Bacon.fromPromise(getUserPayment(userId).then(({ payload }) => payload))
+  Bacon.fromPromise(getUserPayment(userId, Nothing).then(({ payload }) => payload))
 

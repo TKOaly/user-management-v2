@@ -1,11 +1,12 @@
 import { getMe, searchUsers, getUserPayment } from '../services/tkoUserService'
 import { AppProps } from '../features/App'
+import { Maybe } from 'purify-ts'
 
-const getUserList = (token: string) =>
+const getUserList = (token: Maybe<string>) =>
   searchUsers('', token)
     .then(({ payload }) => payload)
 
-export const resolveInitialState = async (token: string, path: string, editUserId?: string): Promise<AppProps> => {
+export const resolveInitialState = async (token: Maybe<string>, path: string, editUserId?: string): Promise<AppProps> => {
   const me = await getMe(token).then(({ payload }) => payload)
   const userList = me.role !== 'kayttaja' ? await getUserList(token) : []
   const resolvedUserId = editUserId === 'me' ? me.id : Number(editUserId)

@@ -6,6 +6,7 @@ import app from '../features/App'
 import { searchUsers, getUserPayment, conditionalUserFetch } from '../services/tkoUserService'
 import cookieParser from 'cookie-parser'
 import { resolveInitialState } from './initialStateResolver'
+import { Maybe } from 'purify-ts'
 
 const PORT = process.env.PORT || 3000
 const server = express()
@@ -14,7 +15,7 @@ server.use(express.static('dist'))
 server.use(cookieParser())
 
 const renderApp = async (req: express.Request, res: express.Response) => {
-  const initialState = await resolveInitialState(req.cookies.token, req.path, req.params.id)
+  const initialState = await resolveInitialState(Maybe.fromNullable(req.cookies.token), req.path, req.params.id)
   app(initialState).onValue(root => {
     const body = ReactServer.renderToString(<>{root}</>)
     res.send(createTemplate({
@@ -31,13 +32,13 @@ server.get('/edit/user/:id', (req, res) => renderApp(req, res))
 server.get(
   '/api/users', (req, res) =>
     req.query.conditions ?
-    conditionalUserFetch(req.query.conditions as string, req.cookies.token)
+    conditionalUserFetch(req.query.conditions as string, Maybe.fromNullable(req.cookies.token),)
       .then(users => res.json(users))
       .catch(e => {
         console.error(e)
         res.status(500).json({ error: 'internal server error' })
       }) :
-    searchUsers(req.query.searchTerm.toString(), req.cookies.token)
+    searchUsers(req.query.searchTerm.toString(), Maybe.fromNullable(req.cookies.token),)
       .then(users => res.json(users))
       .catch(e => {
         console.error(e)
@@ -47,7 +48,7 @@ server.get(
 
 server.get(
   '/api/users/:id/payments', (req, res) =>
-    getUserPayment(Number(req.params.id), req.cookies.token)
+    getUserPayment(Number(req.params.id), Maybe.fromNullable(req.cookies.token),)
       .then(payment => res.json(payment))
       .catch(e => {
         console.error(e)

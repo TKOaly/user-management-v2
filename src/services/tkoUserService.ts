@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getEnvConfig } from '../config/config'
+import { Maybe, List } from 'purify-ts'
 
 const config = getEnvConfig()
 
@@ -41,45 +42,43 @@ export interface Payment {
   paid: string
 }
 
-const resolveClientToken = () => {
-  if (typeof window !== 'undefined') {
-    return window.document.cookie.split('; ').find(s => s.startsWith('token')).split('=')[1]
-  }
+const resolveClientToken = (token: Maybe<string>) =>
+  typeof window !== 'undefined' ?
+  Maybe.fromNullable(window.document.cookie.split('; ').find(s => s.startsWith('token')) || null)
+    .chain(tokenCookie => List.at(1, tokenCookie.split('=')))
+  : token
 
-  return ''
-}
-
-const withHeaders = (token?: string) => ({
+const withHeaders = (token: Maybe<string>) => ({
   headers: {
-    Authorization: `Bearer ${token ? token : resolveClientToken()}`,
+    Authorization: `Bearer ${resolveClientToken(token).orDefault('')}`,
     service: config.serviceIdentifier
   }
 })
 
-export const getMe = (token?: string): Promise<UserServicePayload<UserServiceUser>> =>
+export const getMe = (token: Maybe<string>): Promise<UserServicePayload<UserServiceUser>> =>
   client
     .get('/users/me', withHeaders(token))
     .then(({ data }: { data: UserServicePayload<UserServiceUser> }) => data)
     .catch(e => e.response)
 
-export const searchUsers = (searchTerm: string, token?: string): Promise<UserServicePayload<UserServiceUser[]>> =>
+export const searchUsers = (searchTerm: string, token: Maybe<string>): Promise<UserServicePayload<UserServiceUser[]>> =>
   client
     .get('/users', { ...withHeaders(token), params: { searchTerm } })
     .then(({ data }: { data: UserServicePayload<UserServiceUser[]> }) => data)
 
-export const getUserById = (id: number, token?: string): Promise<UserServicePayload<UserServiceUser | null>> =>
+export const getUserById = (id: number, token: Maybe<string>): Promise<UserServicePayload<UserServiceUser | null>> =>
   client
     .get('/users/' + id, withHeaders(token))
     .then(({ data }: { data: UserServicePayload<UserServiceUser> }) => data)
     .catch(e => e.response.data)
 
-export const getUserPayment = (userId: number, token?: string): Promise<UserServicePayload<Payment>> =>
+export const getUserPayment = (userId: number, token: Maybe<string>): Promise<UserServicePayload<Payment>> =>
   client
     .get(`/users/${userId}/payments`, { ...withHeaders(token), params: { query: 'validPayment' } })
     .then(({ data }) => data)
     .catch(e => e.response.data)
 
-export const conditionalUserFetch = (conditions: string, token?: string): Promise<UserServicePayload<UserServiceUser[]>> =>
+export const conditionalUserFetch = (conditions: string, token: Maybe<string>): Promise<UserServicePayload<UserServiceUser[]>> =>
   client
     .get('/users', { ...withHeaders(token), params: { conditions } })
     .then(({ data }: { data: UserServicePayload<UserServiceUser[]> }) => data)
