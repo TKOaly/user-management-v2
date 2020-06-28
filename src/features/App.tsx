@@ -11,15 +11,16 @@ import { pageNavigationStore } from '../stores/pageNavigationStore'
 import { userEditStore, EditUser } from '../stores/userEditStore'
 import { dispatch } from '../actionDispatcher'
 import { setEditUserAction } from '../actions'
+import { getUserServiceLoginUrl } from '../config/config'
 
 export interface AppProps {
-  user: UserServiceUser
+  user: UserServiceUser | null
   userSearchState: UserListProps
   navigation: {
     path: string
   }
   userEditState: {
-    editUser: EditUser
+    editUser: EditUser | null
   }
 }
 
@@ -51,6 +52,11 @@ const App = ({ user, userSearchState, navigation, userEditState }: AppProps) => 
 }
 
 export default (initialState: AppProps) => {
+  if (!initialState.user) {
+    if (typeof window !== 'undefined')
+      window.location.href = getUserServiceLoginUrl()
+    return Bacon.once(<></>)
+  }
   const userSearchStoreP = userSearchStore(initialState.userSearchState)
   const pageNavigationStoreP = pageNavigationStore(initialState.navigation)
   const userEditStoreP = userEditStore(initialState.userEditState)

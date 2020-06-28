@@ -18,5 +18,11 @@ export const getEnvConfig = (): Config => {
     return process.env.NODE_ENV === 'prod' ? prodConfig : devConfig
   }
 
-  return window.location.host !== 'localhost' ? prodConfig : devConfig
+  return !window.location.host.startsWith('localhost') ? prodConfig : devConfig
+}
+
+export const getUserServiceLoginUrl = () => {
+  const { userServiceBaseUrl, serviceIdentifier } = getEnvConfig()
+  console.log(userServiceBaseUrl, serviceIdentifier)
+  return `${userServiceBaseUrl}?serviceIdentifier=${serviceIdentifier}`
 }

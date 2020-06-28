@@ -5,7 +5,7 @@ import { Maybe, List } from 'purify-ts'
 const config = getEnvConfig()
 
 const client = axios.create({
-  baseURL: `${config.userServiceBaseUrl}/api`
+  baseURL:  typeof window !== 'undefined' ? '/api' : `${config.userServiceBaseUrl}/api`
 })
 
 
@@ -42,15 +42,32 @@ export interface Payment {
   paid: string
 }
 
+export interface UserPostBody {
+  username: string
+  name: string
+  screenName: string
+  email: string
+  residence: string
+  phone: string
+  isHyStaff: boolean
+  isHyStudent: boolean
+  isHYYMember: boolean
+  isTKTL: boolean
+  role?: string
+  membership?: string
+}
+
 const resolveClientToken = (token: Maybe<string>) =>
   typeof window !== 'undefined' ?
-  Maybe.fromNullable(window.document.cookie.split('; ').find(s => s.startsWith('token')) || null)
-    .chain(tokenCookie => List.at(1, tokenCookie.split('=')))
-  : token
+  Maybe
+    .fromNullable(window.document.cookie.split('; ').find(s => s.startsWith('token')))
+    .chain(tokenCookie => List.at(1, tokenCookie.split('='))) :
+  token
 
 const withHeaders = (token: Maybe<string>) => ({
   headers: {
     Authorization: `Bearer ${resolveClientToken(token).orDefault('')}`,
+    'content-type': 'application/json',
     service: config.serviceIdentifier
   }
 })
@@ -82,3 +99,8 @@ export const conditionalUserFetch = (conditions: string, token: Maybe<string>): 
   client
     .get('/users', { ...withHeaders(token), params: { conditions } })
     .then(({ data }: { data: UserServicePayload<UserServiceUser[]> }) => data)
+
+export const modifyUser = (id: number, body: UserPostBody, token: Maybe<string>): Promise<any> =>
+  client
+    .patch(`/users/${id}`, body, { ...withHeaders(token) })
+    .then(({ data }) => data)

@@ -5,3 +5,4 @@ export const userSearchFieldChangedAction: Action<string> = 'userSearchFieldChan
 export const changePageAction: Action<string> = 'changePage'
 export const modifyUserEditFormDataAction: Action<{[key: string]: string}> ='modifyUserEditFormData'
 export const setEditUserAction: Action<UserServiceUser> = 'setEditUser'
+export const updateUserAction: Action<UserServiceUser> = 'updateUser'
