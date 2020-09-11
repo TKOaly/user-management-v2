@@ -12,6 +12,9 @@ import { userEditStore, EditUser } from '../stores/userEditStore'
 import { dispatch } from '../actionDispatcher'
 import { setEditUserAction } from '../actions'
 import { getUserServiceLoginUrl } from '../config/config'
+import NewUserForm, { SuccessfulRegistration } from './components/NewUserForm'
+import createUserStore, { CreateUserFormState } from '../stores/createUserStore'
+import { Nothing } from 'purify-ts'
 
 export interface AppProps {
   user: UserServiceUser | null
@@ -22,6 +25,12 @@ export interface AppProps {
   userEditState: {
     editUser: EditUser | null
   }
+  createUserState?: {
+    createUserFormState: CreateUserFormState
+    completedUser?: UserServiceUser
+    isFormValid: boolean
+    paymentCreationCompleted: boolean
+  }
 }
 
 const adminTools = (users: UserServiceUser[]) =>
@@ -30,14 +39,14 @@ const adminTools = (users: UserServiceUser[]) =>
     <UsersList users={users} />
   </>
 
-const App = ({ user, userSearchState, navigation, userEditState }: AppProps) => {
+const App = ({ user, userSearchState, navigation, userEditState, createUserState }: AppProps) => {
   const pathCheck = onPath(navigation.path)
 
   return (
     <>
       <NavBar user={user} />
       <div className="container">
-        {user.role !== 'kayttaja' && adminTools(userSearchState.users)}
+        {(user && user.role !== 'kayttaja') && adminTools(userSearchState.users)}
         {pathCheck('/edit/user/me', () => {
           if (!userEditState.editUser || userEditState.editUser.id !== user.id) {
             dispatch(setEditUserAction, user)
@@ -46,33 +55,46 @@ const App = ({ user, userSearchState, navigation, userEditState }: AppProps) => 
           return <EditUserModal user={userEditState.editUser} authorizedUser={user} />
         })}
         {pathCheck('/edit/user/:id<\\d+>', ({ id }: { id: string }) => <EditUserModal user={userEditState.editUser} authorizedUser={user} />)}
+        {pathCheck('/create', () =>
+          createUserState &&
+          <NewUserForm
+            fromState={createUserState.createUserFormState}
+            completedUser={createUserState.completedUser}
+            isFormValid={createUserState.isFormValid}
+          />)}
+        {pathCheck('/create/complete', () =>
+          user && <SuccessfulRegistration completedUser={user} paymentCompleted={createUserState.paymentCreationCompleted} />
+        )}
       </div>
     </>
   )
 }
 
 export default (initialState: AppProps) => {
-  if (!initialState.user) {
+  if (!initialState.user && initialState.navigation.path !== '/create') {
     if (typeof window !== 'undefined')
-      window.location.href = getUserServiceLoginUrl()
+      window.location.href = getUserServiceLoginUrl(Nothing)
     return Bacon.once(<></>)
   }
   const userSearchStoreP = userSearchStore(initialState.userSearchState)
   const pageNavigationStoreP = pageNavigationStore(initialState.navigation)
   const userEditStoreP = userEditStore(initialState.userEditState)
+  const createUserStoreP = createUserStore()
 
   watchPageChanges()
 
   return Bacon.combineTemplate({
     userSearchStoreState: userSearchStoreP,
     pageNavigationState: pageNavigationStoreP,
-    userEditState: userEditStoreP
-  }).map(({ userSearchStoreState, pageNavigationState, userEditState }) => {
+    userEditState: userEditStoreP,
+    createUserState: createUserStoreP
+  }).map(({ userSearchStoreState, pageNavigationState, userEditState, createUserState }) => {
     const state: AppProps = {
       ...initialState,
       userSearchState: userSearchStoreState,
       navigation: pageNavigationState,
-      userEditState
+      userEditState,
+      createUserState
     }
 
     return <App { ...state } />

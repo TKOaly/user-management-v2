@@ -2,7 +2,7 @@ import React from 'react'
 import { UserServiceUser } from '../../services/tkoUserService'
 
 interface NavBarProps {
-  user: UserServiceUser
+  user?: UserServiceUser
 }
 
 export default (props: NavBarProps) =>
@@ -12,14 +12,17 @@ export default (props: NavBarProps) =>
       <p className="rainbow-text animated">TKO-äly user mngmnt :DD</p>
     </div>
     <div className="navbar-end">
-      <a className="navbar-item">
+      <a href="https://tko-aly.fi" className="navbar-item">
         TKO-äly Home
       </a>
-      <a className="navbar-item">
+      <a href="https://members.tko-aly.fi" className="navbar-item">
         Event Calendar
       </a>
-      <a className="navbar-item">
-        {props.user.name}
-      </a>
+      {
+        props.user &&
+        <p className="navbar-item">
+          Logged in as {props.user.name}
+        </p>
+      }
     </div>
   </nav>

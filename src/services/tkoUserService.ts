@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { getEnvConfig } from '../config/config'
 import { Maybe, List } from 'purify-ts'
+import { CreateUserPostBody } from '../stores/createUserStore'
 
 const config = getEnvConfig()
 
@@ -34,6 +35,12 @@ export interface UserServiceUser {
   isHyStudent: boolean 
 }
 
+export interface CreatePaymentBody {
+  payer_id: number
+  amount: number
+  valid_until: String
+  payment_type: string
+}
 
 export interface Payment {
   id: number
@@ -103,4 +110,19 @@ export const conditionalUserFetch = (conditions: string, token: Maybe<string>): 
 export const modifyUser = (id: number, body: UserPostBody, token: Maybe<string>): Promise<any> =>
   client
     .patch(`/users/${id}`, body, { ...withHeaders(token) })
+    .then(({ data }) => data)
+
+export const createNewUser = (body: CreateUserPostBody, token: Maybe<string>): Promise<UserServicePayload<UserServiceUser>> =>
+  client
+    .post('/users', body, withHeaders(token))
+    .then(({ data }) => data)
+
+export const createMembershipPayment = (years: number, token: Maybe<string>) =>
+  client
+    .post('/payments/membership', { years }, withHeaders(token))
+    .then(({ data }) => data)
+
+export const createPayment = (body: CreatePaymentBody, token: Maybe<string>): Promise<any> =>
+  client
+    .post('/payments', body, withHeaders(token))
     .then(({ data }) => data)

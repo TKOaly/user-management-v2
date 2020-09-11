@@ -1,3 +1,5 @@
+import { Maybe } from "purify-ts"
+
 interface Config {
   userServiceBaseUrl: string,
   serviceIdentifier: string
@@ -21,8 +23,7 @@ export const getEnvConfig = (): Config => {
   return !window.location.host.startsWith('localhost') ? prodConfig : devConfig
 }
 
-export const getUserServiceLoginUrl = () => {
+export const getUserServiceLoginUrl = (redirect: Maybe<string>) => {
   const { userServiceBaseUrl, serviceIdentifier } = getEnvConfig()
-  console.log(userServiceBaseUrl, serviceIdentifier)
-  return `${userServiceBaseUrl}?serviceIdentifier=${serviceIdentifier}`
+  return `${userServiceBaseUrl}?serviceIdentifier=${serviceIdentifier}${redirect.map(url => `&loginRedirect=${url}`).orDefault('')}`
 }

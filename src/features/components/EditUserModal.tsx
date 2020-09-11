@@ -1,17 +1,51 @@
 import React from 'react'
 import { UserServiceUser } from '../../services/tkoUserService'
 import { dispatch } from '../../actionDispatcher'
-import { changePageAction, modifyUserEditFormDataAction, updateUserAction } from '../../actions'
+import { changePageAction, modifyUserEditFormDataAction, updateUserAction, updateUserPaymentAction } from '../../actions'
 import { EditUser } from '../../stores/userEditStore'
 import { adminModif, jvModif, userModif } from '../../utils/userModificationLevels'
+import { paymentTypes, findPaymentType } from '../../fixtures/paymentTypes'
 
 export interface EditUserModalProps {
   user?: EditUser,
   authorizedUser: UserServiceUser
 }
 
+export interface UpdatePaymentActionData {
+  editUser: EditUser
+  confirmer: UserServiceUser
+  membershipAppliedFor: string
+}
+
 const closeModal = () =>
   dispatch(changePageAction, '/')
+
+const AddPaymentBox = ({ user }: { user: EditUser }) =>
+  <div className="box">
+    <div className="media-content">
+      <div className="content">
+        <p><strong>Payment</strong></p>
+        {user.payment ?
+          <p>Users payment valid until ${user.payment.valid_until}</p> :
+          <>
+            <div className="field">
+              <label className="label">Membership duration</label>
+              <div className="control">
+                <div className="select">
+                  <select name="role" id="PaymentSetting" onChange={e => dispatch(updateUserPaymentAction, findPaymentType(e.target.value))}>
+                    {paymentTypes.map(paymentType =>
+                      <option value={paymentType.years}>{`${paymentType.name}, ${paymentType.price}€`}</option>
+                    )}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <button className="button" onClick={closeModal}>Mark as paid</button>
+          </>
+        }
+      </div>
+    </div>
+  </div>
 
 const EditUserForm = ({ user, authorizedUser }: EditUserModalProps) => {
   const enabledFields =
@@ -37,42 +71,36 @@ const EditUserForm = ({ user, authorizedUser }: EditUserModalProps) => {
           <input className="input" type="text" disabled={resolveDisabled('username')} value={user.username} onChange={updateFormData('username')} placeholder="Text input" />
         </div>
       </div>
-
       <div className="field">
         <label className="label">Full name</label>
         <div className="control">
           <input className="input" type="text" disabled={resolveDisabled('name')} value={user.name} onChange={updateFormData('name')} placeholder="Text input" />
         </div>
       </div>
-
       <div className="field">
         <label className="label">Screen name</label>
         <div className="control">
           <input className="input" type="text" disabled={resolveDisabled('screenName')} value={user.screenName} onChange={updateFormData('screenName')} placeholder="Text input" />
         </div>
       </div>
-
       <div className="field">
         <label className="label">Email</label>
         <div className="control">
           <input className="input" type="text" disabled={resolveDisabled('email')} value={user.email} onChange={updateFormData('email')} placeholder="Text input" />
         </div>
       </div>
-
       <div className="field">
         <label className="label">Residence</label>
         <div className="control">
           <input className="input" type="text" disabled={resolveDisabled('residence')} value={user.residence} onChange={updateFormData('residence')} placeholder="Text input" />
         </div>
       </div>
-
       <div className="field">
         <label className="label">Phone number</label>
         <div className="control">
           <input className="input" type="text" disabled={resolveDisabled('phone')} value={user.phone} onChange={updateFormData('phone')} placeholder="Text input" />
         </div>
       </div>
-
       <div className="field">
         <label className="label">Role</label>
         <div className="control">
@@ -86,9 +114,7 @@ const EditUserForm = ({ user, authorizedUser }: EditUserModalProps) => {
             </select>
           </div>
         </div>
-
       </div>
-
       <div className="field">
         <label className="label">Membership</label>
         <div className="control">
@@ -104,23 +130,13 @@ const EditUserForm = ({ user, authorizedUser }: EditUserModalProps) => {
           </div>
         </div>
       </div>
-
       <div className="field">
         <label className="label">Date created</label>
         <div className="control">
           <input className="input" disabled={true} type="text" value={new Date(user.createdAt).toLocaleString()} placeholder="Text input" />
         </div>
       </div>
-
-
-      <div className="box">
-        <div className="media-content">
-          <div className="content">
-            <p><strong>Payment</strong></p>
-            <p>{user.payment ? `Users payment valid until ${user.payment.valid_until}` : 'User has no valid payment.'}</p>
-          </div>
-        </div>
-      </div>
+      <AddPaymentBox user={user} />
     </>
   )
 }

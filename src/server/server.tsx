@@ -3,10 +3,13 @@ import React from 'react'
 import ReactServer from 'react-dom/server'
 import { createTemplate } from './basePage'
 import app from '../features/App'
-import { searchUsers, getUserPayment, conditionalUserFetch, modifyUser } from '../services/tkoUserService'
+import { searchUsers, getUserPayment, conditionalUserFetch, modifyUser, createNewUser, CreatePaymentBody, getMe, createPayment } from '../services/tkoUserService'
 import cookieParser from 'cookie-parser'
 import { resolveInitialState } from './initialStateResolver'
 import { Maybe } from 'purify-ts'
+import { findPaymentType } from '../fixtures/paymentTypes'
+import { setMonth, setDate, addYears, setHours, setMinutes, setSeconds, format } from 'date-fns/fp'
+import { pipe } from 'ramda'
 
 const PORT = process.env.PORT || 3000
 const server = express()
@@ -34,6 +37,8 @@ const renderApp = async (req: express.Request, res: express.Response) => {
 
 server.get('/', (req, res) => renderApp(req, res))
 server.get('/edit/user/:id', (req, res) => renderApp(req, res))
+server.get('/create', (req, res) => renderApp(req, res))
+server.get('/create/complete', (req, res) => renderApp(req, res))
 
 server.get(
   '/api/users', (req, res) =>
@@ -70,5 +75,39 @@ server.patch('/api/users/:id', (req, res) =>
       res.status(500).json({ error: 'internal server error' })
     })
 )
+
+server.post('/api/users', (req, res) =>
+  createNewUser(req.body, Maybe.fromNullable(req.cookies.token))
+    .then(result => res.json(result))
+    .catch(e => {
+      console.error(e)
+      res.status(500).json({ error: 'internal server error' })
+    })
+)
+
+server.post('/api/payments/membership', async (req, res) => {
+  const authorizedUser = await getMe(Maybe.fromNullable(req.cookies.token))
+  const postBody: CreatePaymentBody = {
+    amount: findPaymentType(req.body.years).price,
+    payer_id: authorizedUser.payload.id,
+    payment_type: 'bank',
+    valid_until: pipe(
+      setMonth(7),
+      setDate(1),
+      setHours(0),
+      setMinutes(0),
+      setSeconds(0),
+      addYears(req.body.years),
+      format('y-M-dd hh:mm:ss')
+    )(new Date())
+  }
+
+  createPayment(postBody, Maybe.fromNullable(req.cookies.token))
+    .then(r => res.json(r))
+    .catch(e => {
+      console.error(e)
+      res.status(500).json({ error: 'internal server error' })
+    })
+})
 
 server.listen(PORT, () => console.log('🍺 Listening on port', PORT))

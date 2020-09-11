@@ -1,10 +1,12 @@
 import * as Bacon from 'baconjs'
 import { UserServiceUser, Payment, getUserPayment, UserPostBody, modifyUser } from '../services/tkoUserService'
 import { actionStream, dispatch } from '../actionDispatcher'
-import { modifyUserEditFormDataAction, setEditUserAction, changePageAction, updateUserAction } from '../actions'
+import { modifyUserEditFormDataAction, setEditUserAction, changePageAction, updateUserAction, updateUserPaymentAction, markUserAsPaidAction } from '../actions'
 import { Nothing } from 'purify-ts'
 import * as R from 'ramda'
 import { userModif, jvModif, adminModif } from '../utils/userModificationLevels'
+//import { UpdatePaymentActionData } from '../features/components/EditUserModal'
+//import { PaymentType } from '../fixtures/paymentTypes'
 
 export type EditUser = UserServiceUser & 
 {
@@ -15,6 +17,8 @@ export const userEditStore = (initialState: { editUser: EditUser | null }) => {
   const onFormDataChangedS = actionStream(modifyUserEditFormDataAction)
   const setEditUserS = actionStream(setEditUserAction)
   const updateUserS = actionStream(updateUserAction)
+  const updateUserPaymentP = actionStream(updateUserPaymentAction).toProperty(null)
+  const markUserAsPaidS = actionStream(markUserAsPaidAction)
   const formDataP = Bacon.update(initialState,
     [onFormDataChangedS, (currentState, newValue) => ({ editUser: { ...currentState.editUser, ...newValue }})],
     [setEditUserS, (_, newUser) => ({ editUser: newUser })]
@@ -29,6 +33,10 @@ export const userEditStore = (initialState: { editUser: EditUser | null }) => {
     setEditUserS
       .doAction(({ id }) => dispatch(changePageAction, `/edit/user/${id}`))
       .flatMapLatest(({ id }) => fetchPayments(id))
+
+    markUserAsPaidS
+      .withLatestFrom(updateUserPaymentP, (actionData, paymentType) => ({ actionData, paymentType }))
+      .flatMapLatest(({ actionData, paymentType }) => 1)
 
   return Bacon.update(initialState,
     [onFormDataChangedS, (currentState, newValue) => ({ editUser: { ...currentState.editUser, ...newValue }})],
