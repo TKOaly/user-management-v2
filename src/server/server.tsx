@@ -41,6 +41,7 @@ server.get('/', (req, res) => renderApp(req, res))
 server.get('/edit/user/:id', (req, res) => renderApp(req, res))
 server.get('/create', (req, res) => renderApp(req, res))
 server.get('/create/complete', (req, res) => renderApp(req, res))
+server.get('/ping', (req, res) => res.json({ ok: true }))
 
 server.get(
   '/api/users', (req, res) =>
