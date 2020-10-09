@@ -30,7 +30,7 @@ data "aws_vpc" "tekis_vpc" {
   }
 }
 
-data "aws_subnet_ids" "user_managent_ui_subnets" {
+data "aws_subnet_ids" "user_management_ui_subnets" {
   vpc_id = "${data.aws_vpc.tekis_vpc.id}"
   filter {
     name   = "tag:Name"
@@ -38,7 +38,7 @@ data "aws_subnet_ids" "user_managent_ui_subnets" {
   }
 }
 
-data "aws_ecr_repository" "user_managent_ui_repo" {
+data "aws_ecr_repository" "user_management_ui_repo" {
   name = "user-management-ui"
 }
 
@@ -55,8 +55,8 @@ data "aws_lb_listener" "alb_listener" {
   port              = 443
 }
 
-resource "aws_iam_role" "user_managent_ui_execution_role" {
-  name               = "user-managent-ui-execution-role"
+resource "aws_iam_role" "user_management_ui_execution_role" {
+  name               = "user-management-ui-execution-role"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -74,9 +74,9 @@ resource "aws_iam_role" "user_managent_ui_execution_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "user_managent_ui_execution_role_policy" {
-  name = "user-managent-ui-execution-role-policy"
-  role = "${aws_iam_role.user_managent_ui_execution_role.id}"
+resource "aws_iam_role_policy" "user_management_ui_execution_role_policy" {
+  name = "user-management-ui-execution-role-policy"
+  role = "${aws_iam_role.user_management_ui_execution_role.id}"
 
   policy = <<EOF
 {
@@ -101,8 +101,8 @@ resource "aws_iam_role_policy" "user_managent_ui_execution_role_policy" {
 EOF
 }
 
-resource "aws_security_group" "user_managent_ui_task_sg" {
-  name   = "user-managent-ui-task-sg"
+resource "aws_security_group" "user_management_ui_task_sg" {
+  name   = "user-management-ui-task-sg"
   vpc_id = "${data.aws_vpc.tekis_vpc.id}"
 
   ingress {
@@ -120,7 +120,7 @@ resource "aws_security_group" "user_managent_ui_task_sg" {
   }
 }
 
-resource "aws_alb_target_group" "user_managent_ui_lb_target_group" {
+resource "aws_alb_target_group" "user_management_ui_lb_target_group" {
   name        = "user-management-target-group"
   port        = 3001
   protocol    = "HTTP"
@@ -133,12 +133,12 @@ resource "aws_alb_target_group" "user_managent_ui_lb_target_group" {
   }
 }
 
-resource "aws_alb_listener_rule" "user_managent_ui_listener_rule" {
+resource "aws_alb_listener_rule" "user_management_ui_listener_rule" {
   listener_arn = "${data.aws_lb_listener.alb_listener.arn}"
 
   action {
     type             = "forward"
-    target_group_arn = "${aws_alb_target_group.user_managent_ui_lb_target_group.arn}"
+    target_group_arn = "${aws_alb_target_group.user_management_ui_lb_target_group.arn}"
   }
 
   condition {
@@ -149,22 +149,22 @@ resource "aws_alb_listener_rule" "user_managent_ui_listener_rule" {
 }
 
 
-resource "aws_cloudwatch_log_group" "user_managent_ui_cw" {
-  name = "/ecs/christina-regina/user-managent-ui"
+resource "aws_cloudwatch_log_group" "user_management_ui_cw" {
+  name = "/ecs/christina-regina/user-management-ui"
 }
 
-resource "aws_ecs_task_definition" "user_managent_ui_task" {
+resource "aws_ecs_task_definition" "user_management_ui_task" {
   family                   = "service"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = 256
   memory                   = 512
-  execution_role_arn       = "${aws_iam_role.user_managent_ui_execution_role.arn}"
+  execution_role_arn       = "${aws_iam_role.user_management_ui_execution_role.arn}"
   container_definitions    = <<DEFINITION
 [
   {
-    "name": "user_managent_ui",
-    "image": "${data.aws_ecr_repository.user_managent_ui_repo.repository_url}:latest",
+    "name": "user_management_ui",
+    "image": "${data.aws_ecr_repository.user_management_ui_repo.repository_url}:latest",
     "cpu": 256,
     "memory": null,
     "memoryReservation": null,
@@ -177,7 +177,7 @@ resource "aws_ecs_task_definition" "user_managent_ui_task" {
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "${aws_cloudwatch_log_group.user_managent_ui_cw.name}",
+        "awslogs-group": "${aws_cloudwatch_log_group.user_management_ui_cw.name}",
         "awslogs-region": "eu-west-1",
         "awslogs-stream-prefix": "ecs",
         "awslogs-datetime-format": "%Y-%m-%d %H:%M:%S"
@@ -195,25 +195,25 @@ resource "aws_ecs_task_definition" "user_managent_ui_task" {
 DEFINITION
 }
 
-resource "aws_ecs_service" "user_managent_ui" {
-  name            = "user-managent-ui"
+resource "aws_ecs_service" "user_management_ui" {
+  name            = "user-management-ui"
   cluster         = "${data.aws_ecs_cluster.cluster.id}"
-  task_definition = "${aws_ecs_task_definition.user_managent_ui_task.arn}"
+  task_definition = "${aws_ecs_task_definition.user_management_ui_task.arn}"
   desired_count   = 1
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups = ["${aws_security_group.user_managent_ui_task_sg.id}"]
-    subnets         = "${data.aws_subnet_ids.user_managent_ui_subnets.ids}"
+    security_groups = ["${aws_security_group.user_management_ui_task_sg.id}"]
+    subnets         = "${data.aws_subnet_ids.user_management_ui_subnets.ids}"
   }
 
   load_balancer {
-    target_group_arn = "${aws_alb_target_group.user_managent_ui_lb_target_group.arn}"
-    container_name   = "user_managent_ui"
+    target_group_arn = "${aws_alb_target_group.user_management_ui_lb_target_group.arn}"
+    container_name   = "user_management_ui"
     container_port   = 3001
   }
 
   depends_on = [
-    aws_alb_target_group.user_managent_ui_lb_target_group
+    aws_alb_target_group.user_management_ui_lb_target_group
   ]
 }
