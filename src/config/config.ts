@@ -1,4 +1,4 @@
-import { Maybe } from "purify-ts"
+import { Maybe } from 'purify-ts'
 
 interface Config {
   userServiceBaseUrl: string,
@@ -11,7 +11,7 @@ const devConfig: Config = {
 }
 
 const prodConfig: Config = {
-  userServiceBaseUrl: '',
+  userServiceBaseUrl: 'https://users.tko-aly.fi',
   serviceIdentifier: ''
 }
 
