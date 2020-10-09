@@ -1,10 +1,10 @@
 import * as Bacon from 'baconjs'
-import * as R from 'ramda'
 import { actionStream } from '../actionDispatcher'
 import { modifyCreateUserFormDataAction, createUserAction, setUserMembershipPaymentFormStateAction, createUserMembershipPaymentAction } from '../actions'
 import { createNewUser, createMembershipPayment } from '../services/tkoUserService'
 import { Nothing, Just } from 'purify-ts'
 import { getUserServiceLoginUrl } from '../config/config'
+import userValidator from '../validation/userValidator'
 
 export interface CreateUserFormState {
   username: string
@@ -27,6 +27,8 @@ export interface UserMembershipPaymentFormState {
 }
 
 export type CreateUserPostBody = Omit<CreateUserFormState, 'firstName' | 'lastName'> & { name: string }
+
+export type PaymentCreationStatus = 'loading' | 'done' | 'not-created'
 
 export default () => {
   const modifyFormDataS = actionStream(modifyCreateUserFormDataAction)
@@ -65,26 +67,33 @@ export default () => {
       })
 
     const formValidP = modifyFormDataS
-      .withLatestFrom(formStateP, (_, form) => form) 
-      .map(validateForm)
-      .toProperty(undefined)
+      .withLatestFrom(formStateP, (_, form) => form)
+      .map(v => {
+        const validation = userValidator.validate(v)
+        return validation.error ? Just(validation.error.message) :
+          validation.errors ? Just(validation.errors.message) :
+          Nothing
+      })
+      .toProperty(Nothing)
 
     const createMembershipPaymentStatusP = modifyMembershipPaymentP
       .sampledBy(createUserMembershipPayment)
       .flatMapLatest(({ years }) => createBankPayment(years))
-      .map(() => true)
-      .toProperty(false)
+      .map(() => 'done' as PaymentCreationStatus)
+      .toProperty('not-created' as PaymentCreationStatus)
     
     return Bacon.combineTemplate({
       formState: formStateP,
       completedUser: undefined,
-      isFormValid: formValidP,
-      paymentCreationCompleted: createMembershipPaymentStatusP
-    }).map(({ formState, completedUser, isFormValid, paymentCreationCompleted }) => ({
+      formErrors: formValidP,
+      paymentCreationStatus: createUserMembershipPayment
+        .map(() => 'loading' as PaymentCreationStatus)
+        .merge(createMembershipPaymentStatusP.toEventStream())
+    }).map(({ formState, completedUser, formErrors, paymentCreationStatus }) => ({
       createUserFormState: formState,
       completedUser,
-      isFormValid: !!isFormValid,
-      paymentCreationCompleted
+      formErrors: formErrors,
+      paymentCreationStatus
     }))
 }
 
@@ -105,12 +114,6 @@ const createUser = (formData: CreateUserFormState) =>
       password2: formData.password2
     }, Nothing)
   )
-
-const validateForm = R.pipe(
-  (input: CreateUserFormState) => R.values(input),
-  R.map(v => R.isEmpty(v) || R.isNil(v)),
-  R.all(R.not)
-)
 
 const createBankPayment = (years: number) => {
   return Bacon.fromPromise(createMembershipPayment(years, Nothing))

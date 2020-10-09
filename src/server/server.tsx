@@ -10,6 +10,8 @@ import { Maybe } from 'purify-ts'
 import { findPaymentType } from '../fixtures/paymentTypes'
 import { setMonth, setDate, addYears, setHours, setMinutes, setSeconds, format } from 'date-fns/fp'
 import { pipe } from 'ramda'
+import { resolveMembershipType } from '../utils/membershipTypeResolver'
+import { sendPaymentInstrtuctions } from '../services/emailService'
 
 const PORT = process.env.PORT || 3000
 const server = express()
@@ -90,7 +92,12 @@ server.post('/api/payments/membership', async (req, res) => {
   const postBody: CreatePaymentBody = {
     amount: findPaymentType(req.body.years).price,
     payer_id: authorizedUser.payload.id,
-    payment_type: 'bank',
+    payment_type: 'tilisiirto',
+    membership_applied_for: resolveMembershipType(
+      authorizedUser.payload.isTKTL,
+      authorizedUser.payload.isHYYMember,
+      authorizedUser.payload.isHyStaff
+    ),
     valid_until: pipe(
       setMonth(7),
       setDate(1),
@@ -103,7 +110,11 @@ server.post('/api/payments/membership', async (req, res) => {
   }
 
   createPayment(postBody, Maybe.fromNullable(req.cookies.token))
-    .then(r => res.json(r))
+    .then(async r => {
+      await sendPaymentInstrtuctions(authorizedUser.payload.email, r.payload)
+      return r
+    })
+    .then(payment => res.json(payment))
     .catch(e => {
       console.error(e)
       res.status(500).json({ error: 'internal server error' })

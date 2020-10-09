@@ -4,6 +4,11 @@
 
 * Configure user-service to run locally.
 * Fill in some configurations in config.ts.
+* Run:
+```
+export EMAIL_DISPATCHER_URL=[url to email dispatcher]
+export EMAIL_DISPATCHER_TOKEN=[token for email dispatcher]
+```
 * `yarn install`
 * `yarn watch` for development. You need to manually refresh the site when nodemon has rebuilt the dist files.
 

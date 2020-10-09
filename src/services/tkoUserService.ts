@@ -9,7 +9,6 @@ const client = axios.create({
   baseURL:  typeof window !== 'undefined' ? '/api' : `${config.userServiceBaseUrl}/api`
 })
 
-
 interface UserServicePayload<T> {
   ok: boolean
   message: string
@@ -39,14 +38,20 @@ export interface CreatePaymentBody {
   payer_id: number
   amount: number
   valid_until: String
+  membership_applied_for: string
   payment_type: string
 }
 
 export interface Payment {
   id: number
-  valid_until: string
   amount: string
-  paid: string
+  confirmer_id: number | null
+  membership_applied_for: "full member"
+  paid: string | null
+  payer_id: number
+  payment_type: string
+  reference_number: string
+  valid_until: string
 }
 
 export interface UserPostBody {
@@ -122,7 +127,7 @@ export const createMembershipPayment = (years: number, token: Maybe<string>) =>
     .post('/payments/membership', { years }, withHeaders(token))
     .then(({ data }) => data)
 
-export const createPayment = (body: CreatePaymentBody, token: Maybe<string>): Promise<any> =>
+export const createPayment = (body: CreatePaymentBody, token: Maybe<string>): Promise<UserServicePayload<Payment>> =>
   client
     .post('/payments', body, withHeaders(token))
     .then(({ data }) => data)

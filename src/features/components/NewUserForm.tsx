@@ -1,9 +1,11 @@
 import React from 'react'
-import { CreateUserFormState } from '../../stores/createUserStore'
+import { CreateUserFormState, PaymentCreationStatus } from '../../stores/createUserStore'
 import { dispatch } from '../../actionDispatcher'
 import { modifyCreateUserFormDataAction, createUserAction, setUserMembershipPaymentFormStateAction, createUserMembershipPaymentAction } from '../../actions'
 import { UserServiceUser } from '../../services/tkoUserService'
 import { paymentTypes } from '../../fixtures/paymentTypes'
+import { Maybe } from 'purify-ts'
+import { resolveMembershipType } from '../../utils/membershipTypeResolver'
 
 const updateFormData = (field: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
   dispatch(modifyCreateUserFormDataAction, {[field]: event.target.value})
@@ -14,30 +16,43 @@ const updateRadioFormData = (membershipType: string) => () =>
     isTKTL: membershipType === 'fullMember'
   })
 
-const resolveMembershipType = (isTKTL: boolean, isHYY: boolean, isHyStaff: boolean) => 
-  isTKTL ? 'full member' : 
-  isHYY || isHyStaff ? 'outside member' :
-  'supporting member'
-
-export const SuccessfulRegistration = ({ completedUser, paymentCompleted }: { completedUser: UserServiceUser, paymentCompleted: boolean }) =>
-  paymentCompleted ?
+export const SuccessfulRegistration = ({ completedUser, paymentCreationStatus }: { completedUser: UserServiceUser, paymentCreationStatus: PaymentCreationStatus }) =>
+  paymentCreationStatus === 'done' ?
   <div className="successful-registration">
     <h2 className="title">Thanks!</h2>
     <p>Your membership application will be reviewed at the next board meeting.</p>
+    <p>You should receive an email with payment instructions. Pls also check junk folder before contacting anyone.</p>
   </div> :
+  paymentCreationStatus === 'not-created' ?
   <div className="successful-registration">
     <h2 className="title">Thanks for signing up {completedUser.screenName}!</h2>
     <p>You are seeking to become a {resolveMembershipType(completedUser.isTKTL, completedUser.isHYYMember, completedUser.isHyStaff)}.</p>
+    <p>If you want to pay by cash, skip this step and bring the cash to someone from the board, for example in Gurula.</p>
+    <br />
     <p>Next, select your membership period:</p>
     <div className="select">
       <select onChange={e => dispatch(setUserMembershipPaymentFormStateAction, { years: Number(e.target.value) })}>
         {paymentTypes.map(({ name, price, years }) => <option value={years}>{name}, {price}€</option>)}
       </select>
     </div>
-    <button className="button" onClick={() => dispatch(createUserMembershipPaymentAction, null)}>Create</button>
+    <br />
+    <button style={{ marginTop: '20px' }} className="button" onClick={() => dispatch(createUserMembershipPaymentAction, null)}>Select</button>
+  </div> :
+  <div className="successful-registration">
+    <div className="lds-grid">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
   </div>
 
-export default ({ fromState, completedUser, isFormValid }: { fromState: CreateUserFormState, completedUser?: UserServiceUser, isFormValid: boolean }) =>
+export default ({ fromState, formErrors }: { fromState: CreateUserFormState, completedUser?: UserServiceUser, formErrors: Maybe<string> }) =>
   <div className="create-user-form">
     <h2 className="title">Create user</h2>
     <div className="field">
@@ -105,12 +120,18 @@ export default ({ fromState, completedUser, isFormValid }: { fromState: CreateUs
       </label>
       <label className="radio">
         <input type="radio" name="rsvp" onChange={updateRadioFormData('supportingMember')} />
-        I seeking to become a supporting member.
+        I'm seeking to become a supporting member.
       </label>
     </div>
     <label className="checkbox">
       <input type="checkbox" checked={fromState.isHYYMember} onChange={() => dispatch(modifyCreateUserFormDataAction, { isHYYMember: !fromState.isHYYMember })} />
       I'm a member of HYY
     </label>
-    <button disabled={!isFormValid} className="button is-primary" onClick={() => dispatch(createUserAction, null)}>Create</button>
+    {
+      formErrors
+        .map(error => <p className="error">❌ {error}</p>)
+        .orDefault(null)
+    }
+    <br />
+    <button disabled={formErrors.map(() => true).orDefault(false)} className="button is-primary" onClick={() => dispatch(createUserAction, null)}>Create</button>
   </div>

@@ -13,8 +13,8 @@ import { dispatch } from '../actionDispatcher'
 import { setEditUserAction } from '../actions'
 import { getUserServiceLoginUrl } from '../config/config'
 import NewUserForm, { SuccessfulRegistration } from './components/NewUserForm'
-import createUserStore, { CreateUserFormState } from '../stores/createUserStore'
-import { Nothing } from 'purify-ts'
+import createUserStore, { CreateUserFormState, PaymentCreationStatus } from '../stores/createUserStore'
+import { Nothing, Maybe } from 'purify-ts'
 
 export interface AppProps {
   user: UserServiceUser | null
@@ -28,8 +28,8 @@ export interface AppProps {
   createUserState?: {
     createUserFormState: CreateUserFormState
     completedUser?: UserServiceUser
-    isFormValid: boolean
-    paymentCreationCompleted: boolean
+    formErrors: Maybe<string>
+    paymentCreationStatus: PaymentCreationStatus
   }
 }
 
@@ -60,10 +60,10 @@ const App = ({ user, userSearchState, navigation, userEditState, createUserState
           <NewUserForm
             fromState={createUserState.createUserFormState}
             completedUser={createUserState.completedUser}
-            isFormValid={createUserState.isFormValid}
+            formErrors={createUserState.formErrors}
           />)}
         {pathCheck('/create/complete', () =>
-          user && <SuccessfulRegistration completedUser={user} paymentCompleted={createUserState.paymentCreationCompleted} />
+          user && <SuccessfulRegistration completedUser={user} paymentCreationStatus={createUserState.paymentCreationStatus} />
         )}
       </div>
     </>
