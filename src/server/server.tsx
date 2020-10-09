@@ -12,13 +12,17 @@ import { setMonth, setDate, addYears, setHours, setMinutes, setSeconds, format }
 import { pipe } from 'ramda'
 import { resolveMembershipType } from '../utils/membershipTypeResolver'
 import { sendPaymentInstrtuctions } from '../services/emailService'
+import morgan from 'morgan'
 
 const PORT = process.env.PORT || 3000
 const server = express()
 
+const logger = morgan(':method :url :status - :response-time ms')
+
 server.use(express.static('dist'))
 server.use(express.json())
 server.use(cookieParser())
+server.use(logger)
 
 const renderApp = async (req: express.Request, res: express.Response) => {
   try {
