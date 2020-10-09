@@ -121,7 +121,7 @@ resource "aws_security_group" "user_managent_ui_task_sg" {
 }
 
 resource "aws_alb_target_group" "user_managent_ui_lb_target_group" {
-  name        = "cb-target-group"
+  name        = "user-management-target-group"
   port        = 3001
   protocol    = "HTTP"
   vpc_id      = "${data.aws_vpc.tekis_vpc.id}"
