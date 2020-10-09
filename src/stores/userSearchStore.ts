@@ -1,21 +1,25 @@
 import * as Bacon from 'baconjs'
 import { actionStream } from '../actionDispatcher'
 import { userSearchFieldChangedAction } from '../actions'
-import { searchUsers, UserServiceUser, conditionalUserFetch } from '../services/tkoUserService'
+import {
+  searchUsers,
+  UserServiceUser,
+  conditionalUserFetch,
+} from '../services/tkoUserService'
 import { UserListProps } from '../features/components/UsersList'
 import { Nothing } from 'purify-ts'
 
 export const userSearchStore = (initialProps: UserListProps) => {
   const userSearchFieldChangedS = actionStream(userSearchFieldChangedAction)
 
-  const userSearchResultS =
-    userSearchFieldChangedS
-      .debounce(300)
-      .flatMapLatest(doSearch)
+  const userSearchResultS = userSearchFieldChangedS
+    .debounce(300)
+    .flatMapLatest(doSearch)
 
-  return Bacon.update(initialProps,
-    [userSearchResultS, (_, newValue) => ({ users: newValue })]  
-  )
+  return Bacon.update(initialProps, [
+    userSearchResultS,
+    (_, newValue) => ({ users: newValue }),
+  ])
 }
 
 const doCondSearch = (additionalSearchTerm: string) => (cond: string) =>
@@ -46,21 +50,23 @@ const doSearch = (searchTerm: string) => {
         return withSearchTerm('revoked')
       default:
         return Bacon.fromPromise(
-          searchUsers(searchTerm, Nothing)
-            .then(({ payload }) => payload)
+          searchUsers(searchTerm, Nothing).then(({ payload }) => payload)
         )
     }
   }
 
   return Bacon.fromPromise(
-    searchUsers(searchTerm, Nothing)
-      .then(({ payload }) => payload)
+    searchUsers(searchTerm, Nothing).then(({ payload }) => payload)
   )
 }
 
-const applySearchFilter = (searchTerm: string) => ({ name, screenName, email, username }: UserServiceUser) =>
+const applySearchFilter = (searchTerm: string) => ({
+  name,
+  screenName,
+  email,
+  username,
+}: UserServiceUser) =>
   name.includes(searchTerm) ||
   screenName.includes(searchTerm) ||
   email.includes(searchTerm) ||
-  username.includes(searchTerm) 
-
+  username.includes(searchTerm)

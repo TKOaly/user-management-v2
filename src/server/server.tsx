@@ -49,14 +49,14 @@ server.get('/ping', (req, res) => res.json({ ok: true }))
 
 server.get(
   '/api/users', (req, res) =>
-    req.query.conditions ?
+  req.query.conditions ?
     conditionalUserFetch(req.query.conditions.toString(), Maybe.fromNullable(req.cookies.token))
       .then(users => res.json(users))
       .catch(e => {
         console.error(e)
         res.status(500).json({ error: 'internal server error' })
       }) :
-    searchUsers(req.query.searchTerm.toString(), Maybe.fromNullable(req.cookies.token),)
+    searchUsers(req.query.searchTerm.toString(), Maybe.fromNullable(req.cookies.token))
       .then(users => res.json(users))
       .catch(e => {
         console.error(e)
@@ -66,12 +66,12 @@ server.get(
 
 server.get(
   '/api/users/:id/payments', (req, res) =>
-    getUserPayment(Number(req.params.id), Maybe.fromNullable(req.cookies.token))
-      .then(payment => res.json(payment))
-      .catch(e => {
-        console.error(e)
-        res.status(500).json({ error: 'internal server error' })
-      })
+  getUserPayment(Number(req.params.id), Maybe.fromNullable(req.cookies.token))
+    .then(payment => res.json(payment))
+    .catch(e => {
+      console.error(e)
+      res.status(500).json({ error: 'internal server error' })
+    })
 )
 
 server.patch('/api/users/:id', (req, res) =>

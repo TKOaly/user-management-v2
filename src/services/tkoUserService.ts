@@ -6,7 +6,8 @@ import { CreateUserPostBody } from '../stores/createUserStore'
 const config = getEnvConfig()
 
 const client = axios.create({
-  baseURL:  typeof window !== 'undefined' ? '/api' : `${config.userServiceBaseUrl}/api`
+  baseURL:
+    typeof window !== 'undefined' ? '/api' : `${config.userServiceBaseUrl}/api`,
 })
 
 interface UserServicePayload<T> {
@@ -31,7 +32,7 @@ export interface UserServiceUser {
   isTKTL: boolean
   isDeleted: boolean
   isHyStaff: boolean
-  isHyStudent: boolean 
+  isHyStudent: boolean
 }
 
 export interface CreatePaymentBody {
@@ -46,7 +47,7 @@ export interface Payment {
   id: number
   amount: string
   confirmer_id: number | null
-  membership_applied_for: "full member"
+  membership_applied_for: 'full member'
   paid: string | null
   payer_id: number
   payment_type: string
@@ -70,64 +71,87 @@ export interface UserPostBody {
 }
 
 const resolveClientToken = (token: Maybe<string>) =>
-  typeof window !== 'undefined' ?
-  Maybe
-    .fromNullable(window.document.cookie.split('; ').find(s => s.startsWith('token')))
-    .chain(tokenCookie => List.at(1, tokenCookie.split('='))) :
-  token
+  typeof window !== 'undefined'
+    ? Maybe.fromNullable(
+        window.document.cookie.split('; ').find(s => s.startsWith('token'))
+      ).chain(tokenCookie => List.at(1, tokenCookie.split('=')))
+    : token
 
 const withHeaders = (token: Maybe<string>) => ({
   headers: {
     Authorization: `Bearer ${resolveClientToken(token).orDefault('')}`,
     'content-type': 'application/json',
-    service: config.serviceIdentifier
-  }
+    service: config.serviceIdentifier,
+  },
 })
 
-export const getMe = (token: Maybe<string>): Promise<UserServicePayload<UserServiceUser>> =>
+export const getMe = (
+  token: Maybe<string>
+): Promise<UserServicePayload<UserServiceUser>> =>
   client
     .get('/users/me', withHeaders(token))
     .then(({ data }: { data: UserServicePayload<UserServiceUser> }) => data)
     .catch(e => e.response)
 
-export const searchUsers = (searchTerm: string, token: Maybe<string>): Promise<UserServicePayload<UserServiceUser[]>> =>
+export const searchUsers = (
+  searchTerm: string,
+  token: Maybe<string>
+): Promise<UserServicePayload<UserServiceUser[]>> =>
   client
     .get('/users', { ...withHeaders(token), params: { searchTerm } })
     .then(({ data }: { data: UserServicePayload<UserServiceUser[]> }) => data)
 
-export const getUserById = (id: number, token: Maybe<string>): Promise<UserServicePayload<UserServiceUser | null>> =>
+export const getUserById = (
+  id: number,
+  token: Maybe<string>
+): Promise<UserServicePayload<UserServiceUser | null>> =>
   client
     .get('/users/' + id, withHeaders(token))
     .then(({ data }: { data: UserServicePayload<UserServiceUser> }) => data)
     .catch(e => e.response.data)
 
-export const getUserPayment = (userId: number, token: Maybe<string>): Promise<UserServicePayload<Payment>> =>
+export const getUserPayment = (
+  userId: number,
+  token: Maybe<string>
+): Promise<UserServicePayload<Payment>> =>
   client
-    .get(`/users/${userId}/payments`, { ...withHeaders(token), params: { query: 'validPayment' } })
+    .get(`/users/${userId}/payments`, {
+      ...withHeaders(token),
+      params: { query: 'validPayment' },
+    })
     .then(({ data }) => data)
     .catch(e => e.response.data)
 
-export const conditionalUserFetch = (conditions: string, token: Maybe<string>): Promise<UserServicePayload<UserServiceUser[]>> =>
+export const conditionalUserFetch = (
+  conditions: string,
+  token: Maybe<string>
+): Promise<UserServicePayload<UserServiceUser[]>> =>
   client
     .get('/users', { ...withHeaders(token), params: { conditions } })
     .then(({ data }: { data: UserServicePayload<UserServiceUser[]> }) => data)
 
-export const modifyUser = (id: number, body: UserPostBody, token: Maybe<string>): Promise<any> =>
+export const modifyUser = (
+  id: number,
+  body: UserPostBody,
+  token: Maybe<string>
+): Promise<any> =>
   client
     .patch(`/users/${id}`, body, { ...withHeaders(token) })
     .then(({ data }) => data)
 
-export const createNewUser = (body: CreateUserPostBody, token: Maybe<string>): Promise<UserServicePayload<UserServiceUser>> =>
-  client
-    .post('/users', body, withHeaders(token))
-    .then(({ data }) => data)
+export const createNewUser = (
+  body: CreateUserPostBody,
+  token: Maybe<string>
+): Promise<UserServicePayload<UserServiceUser>> =>
+  client.post('/users', body, withHeaders(token)).then(({ data }) => data)
 
 export const createMembershipPayment = (years: number, token: Maybe<string>) =>
   client
     .post('/payments/membership', { years }, withHeaders(token))
     .then(({ data }) => data)
 
-export const createPayment = (body: CreatePaymentBody, token: Maybe<string>): Promise<UserServicePayload<Payment>> =>
-  client
-    .post('/payments', body, withHeaders(token))
-    .then(({ data }) => data)
+export const createPayment = (
+  body: CreatePaymentBody,
+  token: Maybe<string>
+): Promise<UserServicePayload<Payment>> =>
+  client.post('/payments', body, withHeaders(token)).then(({ data }) => data)

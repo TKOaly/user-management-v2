@@ -97,6 +97,6 @@ export default (initialState: AppProps) => {
       createUserState
     }
 
-    return <App { ...state } />
+    return <App {...state} />
   })
 }

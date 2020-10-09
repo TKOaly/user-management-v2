@@ -50,12 +50,12 @@ const AddPaymentBox = ({ user }: { user: EditUser }) =>
 const EditUserForm = ({ user, authorizedUser }: EditUserModalProps) => {
   const enabledFields =
     user.id === authorizedUser.id ?
-    userModif :
+      userModif :
       authorizedUser.role === 'yllapitaja' ?
-      adminModif :
+        adminModif :
         authorizedUser.role === 'jasenvirkailija' ?
-        jvModif :
-        userModif
+          jvModif :
+          userModif
 
   const resolveDisabled = (field: string) => !enabledFields.includes(field)
   const updateFormData = (key: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -143,20 +143,20 @@ const EditUserForm = ({ user, authorizedUser }: EditUserModalProps) => {
 
 export default ({ user, authorizedUser }: EditUserModalProps) =>
   user ?
-  <div className="modal is-active">
-    <div className="modal-background" onClick={closeModal}></div>
-    <div className="modal-card">
-      <header className="modal-card-head">
-      <p className="modal-card-title">Edit {user.name}</p>
-        <button className="delete" aria-label="close" onClick={closeModal}></button>
-      </header>
-      <section className="modal-card-body">
-        <EditUserForm user={user} authorizedUser={authorizedUser} />
-      </section>
-      <footer className="modal-card-foot">
-        <button className="button is-success" onClick={() => dispatch(updateUserAction, authorizedUser)}>Save changes</button>
-        <button className="button" onClick={closeModal}>Cancel</button>
-      </footer>
-    </div>
-  </div> : null
+    <div className="modal is-active">
+      <div className="modal-background" onClick={closeModal}></div>
+      <div className="modal-card">
+        <header className="modal-card-head">
+          <p className="modal-card-title">Edit {user.name}</p>
+          <button className="delete" aria-label="close" onClick={closeModal}></button>
+        </header>
+        <section className="modal-card-body">
+          <EditUserForm user={user} authorizedUser={authorizedUser} />
+        </section>
+        <footer className="modal-card-foot">
+          <button className="button is-success" onClick={() => dispatch(updateUserAction, authorizedUser)}>Save changes</button>
+          <button className="button" onClick={closeModal}>Cancel</button>
+        </footer>
+      </div>
+    </div> : null
 

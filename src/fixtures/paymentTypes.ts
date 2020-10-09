@@ -8,17 +8,17 @@ export const paymentTypes: PaymentType[] = [
   {
     name: '1 year',
     price: 4,
-    years: 1
+    years: 1,
   },
   {
     name: '3 years',
     price: 10,
-    years: 3
+    years: 3,
   },
   {
     name: '5 years',
     price: 15,
-    years: 5
+    years: 5,
   },
 ]
 

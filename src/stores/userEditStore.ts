@@ -1,15 +1,25 @@
 import * as Bacon from 'baconjs'
-import { UserServiceUser, Payment, getUserPayment, UserPostBody, modifyUser } from '../services/tkoUserService'
+import {
+  UserServiceUser,
+  Payment,
+  getUserPayment,
+  UserPostBody,
+  modifyUser,
+} from '../services/tkoUserService'
 import { actionStream, dispatch } from '../actionDispatcher'
-import { modifyUserEditFormDataAction, setEditUserAction, changePageAction, updateUserAction, updateUserPaymentAction, markUserAsPaidAction } from '../actions'
+import {
+  modifyUserEditFormDataAction,
+  setEditUserAction,
+  changePageAction,
+  updateUserAction,
+  updateUserPaymentAction,
+  markUserAsPaidAction,
+} from '../actions'
 import { Nothing } from 'purify-ts'
 import * as R from 'ramda'
 import { userModif, jvModif, adminModif } from '../utils/userModificationLevels'
-//import { UpdatePaymentActionData } from '../features/components/EditUserModal'
-//import { PaymentType } from '../fixtures/paymentTypes'
 
-export type EditUser = UserServiceUser & 
-{
+export type EditUser = UserServiceUser & {
   payment: Payment | null
 }
 
@@ -17,46 +27,78 @@ export const userEditStore = (initialState: { editUser: EditUser | null }) => {
   const onFormDataChangedS = actionStream(modifyUserEditFormDataAction)
   const setEditUserS = actionStream(setEditUserAction)
   const updateUserS = actionStream(updateUserAction)
-  const updateUserPaymentP = actionStream(updateUserPaymentAction).toProperty(null)
+  const updateUserPaymentP = actionStream(updateUserPaymentAction).toProperty(
+    null
+  )
   const markUserAsPaidS = actionStream(markUserAsPaidAction)
-  const formDataP = Bacon.update(initialState,
-    [onFormDataChangedS, (currentState, newValue) => ({ editUser: { ...currentState.editUser, ...newValue }})],
+
+  const formDataP = Bacon.update(
+    initialState,
+    [
+      onFormDataChangedS,
+      (currentState, newValue) => ({
+        editUser: { ...currentState.editUser, ...newValue },
+      }),
+    ],
     [setEditUserS, (_, newUser) => ({ editUser: newUser })]
   )
 
-  const updateUserRequestS =
-    updateUserS
-      .withLatestFrom(formDataP, (modifier, data) => ({ data, modifier }))
-      .flatMapLatest(({ data, modifier }) => updateUser(data.editUser.id, data.editUser, modifier))
+  const updateUserRequestS = updateUserS
+    .withLatestFrom(formDataP, (modifier, data) => ({ data, modifier }))
+    .flatMapLatest(({ data, modifier }) =>
+      updateUser(data.editUser.id, data.editUser, modifier)
+    )
 
-  const fetchPaymentInfoS =
-    setEditUserS
-      .doAction(({ id }) => dispatch(changePageAction, `/edit/user/${id}`))
-      .flatMapLatest(({ id }) => fetchPayments(id))
+  const fetchPaymentInfoS = setEditUserS
+    .doAction(({ id }) => dispatch(changePageAction, `/edit/user/${id}`))
+    .flatMapLatest(({ id }) => fetchPayments(id))
 
-    markUserAsPaidS
-      .withLatestFrom(updateUserPaymentP, (actionData, paymentType) => ({ actionData, paymentType }))
-      .flatMapLatest(({ actionData, paymentType }) => 1)
+  markUserAsPaidS
+    .withLatestFrom(updateUserPaymentP, (actionData, paymentType) => ({
+      actionData,
+      paymentType,
+    }))
+    .flatMapLatest(({ actionData, paymentType }) => 1)
 
-  return Bacon.update(initialState,
-    [onFormDataChangedS, (currentState, newValue) => ({ editUser: { ...currentState.editUser, ...newValue }})],
+  return Bacon.update(
+    initialState,
+    [
+      onFormDataChangedS,
+      (currentState, newValue) => ({
+        editUser: { ...currentState.editUser, ...newValue },
+      }),
+    ],
     [setEditUserS, (_, newValue) => ({ editUser: newValue })],
-    [fetchPaymentInfoS, (currentState, payment) => ({ editUser: { ...currentState.editUser, payment }})],
-    [updateUserRequestS, (iv, _) => {
-      if (typeof window !== 'undefined') {
-        // Todo: update user data without refresh
-        window.location.reload()
-      }
+    [
+      fetchPaymentInfoS,
+      (currentState, payment) => ({
+        editUser: { ...currentState.editUser, payment },
+      }),
+    ],
+    [
+      updateUserRequestS,
+      (iv, _) => {
+        if (typeof window !== 'undefined') {
+          // Todo: update user data without refresh
+          window.location.reload()
+        }
 
-      return iv
-    }]
+        return iv
+      },
+    ]
   )
 }
 
 const fetchPayments = (userId: number) =>
-  Bacon.fromPromise(getUserPayment(userId, Nothing).then(({ payload }) => payload))
+  Bacon.fromPromise(
+    getUserPayment(userId, Nothing).then(({ payload }) => payload)
+  )
 
-const updateUser = (id: number, editUser: EditUser, modifier: UserServiceUser) => {
+const updateUser = (
+  id: number,
+  editUser: EditUser,
+  modifier: UserServiceUser
+) => {
   const body: UserPostBody = {
     username: editUser.username,
     name: editUser.name,
@@ -69,14 +111,17 @@ const updateUser = (id: number, editUser: EditUser, modifier: UserServiceUser) =
     isHyStudent: editUser.isHyStudent,
     isTKTL: editUser.isTKTL,
     membership: editUser.membership,
-    role: editUser.role
+    role: editUser.role,
   }
-  const allowedBodyData = editUser.id === modifier.id ?
-    R.pick(userModif, body) :
-    R.cond([
-      [R.equals('jasenvirkailija'), R.always(R.pick(jvModif, body))],
-      [R.equals('yllapitaja'), R.always(R.pick(adminModif, body))],
-      [R.T, R.always({})]
-    ])(modifier.role)
-  return Bacon.fromPromise(modifyUser(id, allowedBodyData, Nothing).then(({ payload }) => payload))
+  const allowedBodyData =
+    editUser.id === modifier.id
+      ? R.pick(userModif, body)
+      : R.cond([
+          [R.equals('jasenvirkailija'), R.always(R.pick(jvModif, body))],
+          [R.equals('yllapitaja'), R.always(R.pick(adminModif, body))],
+          [R.T, R.always({})],
+        ])(modifier.role)
+  return Bacon.fromPromise(
+    modifyUser(id, allowedBodyData, Nothing).then(({ payload }) => payload)
+  )
 }

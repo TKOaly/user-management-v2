@@ -34,6 +34,6 @@ export default () =>
       className="input search-users-input"
       type="text"
       placeholder="Search for users..."
-      onChange={e => dispatch(userSearchFieldChangedAction, e.target.value)} 
+      onChange={e => dispatch(userSearchFieldChangedAction, e.target.value)}
     />
   </div>

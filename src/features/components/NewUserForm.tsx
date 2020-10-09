@@ -8,7 +8,7 @@ import { Maybe } from 'purify-ts'
 import { resolveMembershipType } from '../../utils/membershipTypeResolver'
 
 const updateFormData = (field: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-  dispatch(modifyCreateUserFormDataAction, {[field]: event.target.value})
+  dispatch(modifyCreateUserFormDataAction, { [field]: event.target.value })
 
 const updateRadioFormData = (membershipType: string) => () =>
   dispatch(modifyCreateUserFormDataAction, {
@@ -18,39 +18,39 @@ const updateRadioFormData = (membershipType: string) => () =>
 
 export const SuccessfulRegistration = ({ completedUser, paymentCreationStatus }: { completedUser: UserServiceUser, paymentCreationStatus: PaymentCreationStatus }) =>
   paymentCreationStatus === 'done' ?
-  <div className="successful-registration">
-    <h2 className="title">Thanks!</h2>
-    <p>Your membership application will be reviewed at the next board meeting.</p>
-    <p>You should receive an email with payment instructions. Pls also check junk folder before contacting anyone.</p>
-  </div> :
-  paymentCreationStatus === 'not-created' ?
-  <div className="successful-registration">
-    <h2 className="title">Thanks for signing up {completedUser.screenName}!</h2>
-    <p>You are seeking to become a {resolveMembershipType(completedUser.isTKTL, completedUser.isHYYMember, completedUser.isHyStaff)}.</p>
-    <p>If you want to pay by cash, skip this step and bring the cash to someone from the board, for example in Gurula.</p>
-    <br />
-    <p>Next, select your membership period:</p>
-    <div className="select">
-      <select onChange={e => dispatch(setUserMembershipPaymentFormStateAction, { years: Number(e.target.value) })}>
-        {paymentTypes.map(({ name, price, years }) => <option value={years}>{name}, {price}€</option>)}
-      </select>
-    </div>
-    <br />
-    <button style={{ marginTop: '20px' }} className="button" onClick={() => dispatch(createUserMembershipPaymentAction, null)}>Select</button>
-  </div> :
-  <div className="successful-registration">
-    <div className="lds-grid">
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-  </div>
+    <div className="successful-registration">
+      <h2 className="title">Thanks!</h2>
+      <p>Your membership application will be reviewed at the next board meeting.</p>
+      <p>You should receive an email with payment instructions. Pls also check junk folder before contacting anyone.</p>
+    </div> :
+    paymentCreationStatus === 'not-created' ?
+      <div className="successful-registration">
+        <h2 className="title">Thanks for signing up {completedUser.screenName}!</h2>
+        <p>You are seeking to become a {resolveMembershipType(completedUser.isTKTL, completedUser.isHYYMember, completedUser.isHyStaff)}.</p>
+        <p>If you want to pay by cash, skip this step and bring the cash to someone from the board, for example in Gurula.</p>
+        <br />
+        <p>Next, select your membership period:</p>
+        <div className="select">
+          <select onChange={e => dispatch(setUserMembershipPaymentFormStateAction, { years: Number(e.target.value) })}>
+            {paymentTypes.map(({ name, price, years }) => <option value={years}>{name}, {price}€</option>)}
+          </select>
+        </div>
+        <br />
+        <button style={{ marginTop: '20px' }} className="button" onClick={() => dispatch(createUserMembershipPaymentAction, null)}>Select</button>
+      </div> :
+      <div className="successful-registration">
+        <div className="lds-grid">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
 
 export default ({ fromState, formErrors }: { fromState: CreateUserFormState, completedUser?: UserServiceUser, formErrors: Maybe<string> }) =>
   <div className="create-user-form">

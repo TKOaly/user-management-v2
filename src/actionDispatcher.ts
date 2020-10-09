@@ -7,7 +7,7 @@ const actionBus = new Bacon.Bus()
 export const dispatch = <T>(action: Action<T>, data: T): void =>
   actionBus.push({
     action,
-    data
+    data,
   })
 
 export const actionStream = <T>(actionName: Action<T>): Bacon.EventStream<T> =>
