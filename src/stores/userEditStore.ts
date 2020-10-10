@@ -37,14 +37,25 @@ export const userEditStore = (initialState: { editUser: EditUser | null }) => {
     [
       onFormDataChangedS,
       (currentState, newValue) => ({
-        editUser: { ...currentState.editUser, ...newValue },
+        editUser: {
+          ...currentState.editUser,
+          ...newValue,
+        },
       }),
     ],
-    [setEditUserS, (_, newUser) => ({ editUser: newUser })]
+    [
+      setEditUserS,
+      (_, newUser) => ({
+        editUser: newUser,
+      }),
+    ]
   )
 
   const updateUserRequestS = updateUserS
-    .withLatestFrom(formDataP, (modifier, data) => ({ data, modifier }))
+    .withLatestFrom(formDataP, (modifier, data) => ({
+      data,
+      modifier,
+    }))
     .flatMapLatest(({ data, modifier }) =>
       updateUser(data.editUser.id, data.editUser, modifier)
     )
@@ -58,21 +69,32 @@ export const userEditStore = (initialState: { editUser: EditUser | null }) => {
       actionData,
       paymentType,
     }))
-    .flatMapLatest(({ actionData, paymentType }) => 1)
+    .flatMapLatest(() => 1)
 
   return Bacon.update(
     initialState,
     [
       onFormDataChangedS,
       (currentState, newValue) => ({
-        editUser: { ...currentState.editUser, ...newValue },
+        editUser: {
+          ...currentState.editUser,
+          ...newValue,
+        },
       }),
     ],
-    [setEditUserS, (_, newValue) => ({ editUser: newValue })],
+    [
+      setEditUserS,
+      (_, newValue) => ({
+        editUser: newValue,
+      }),
+    ],
     [
       fetchPaymentInfoS,
       (currentState, payment) => ({
-        editUser: { ...currentState.editUser, payment },
+        editUser: {
+          ...currentState.editUser,
+          payment,
+        },
       }),
     ],
     [

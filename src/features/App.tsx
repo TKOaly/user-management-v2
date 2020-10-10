@@ -58,7 +58,7 @@ const App = ({ user, userSearchState, navigation, userEditState, createUserState
         {pathCheck('/create', () =>
           createUserState &&
           <NewUserForm
-            fromState={createUserState.createUserFormState}
+            formState={createUserState.createUserFormState}
             completedUser={createUserState.completedUser}
             formErrors={createUserState.formErrors}
           />)}

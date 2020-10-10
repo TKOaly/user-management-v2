@@ -52,61 +52,61 @@ export const SuccessfulRegistration = ({ completedUser, paymentCreationStatus }:
         </div>
       </div>
 
-export default ({ fromState, formErrors }: { fromState: CreateUserFormState, completedUser?: UserServiceUser, formErrors: Maybe<string> }) =>
+export default ({ formState, formErrors }: { formState: CreateUserFormState, completedUser?: UserServiceUser, formErrors: Maybe<string> }) =>
   <div className="create-user-form">
     <h2 className="title">Create user</h2>
     <div className="field">
       <label className="label">Username</label>
       <div className="control">
-        <input className="input" type="text" value={fromState.username} onChange={updateFormData('username')} required={true} />
+        <input className="input" type="text" value={formState.username} onChange={updateFormData('username')} required={true} />
       </div>
     </div>
     <div className="field">
       <label className="label">First name</label>
       <div className="control">
-        <input className="input" type="text" value={fromState.firstName} onChange={updateFormData('firstName')} required={true} />
+        <input className="input" type="text" value={formState.firstName} onChange={updateFormData('firstName')} required={true} />
       </div>
     </div>
     <div className="field">
       <label className="label">Last name</label>
       <div className="control">
-        <input className="input" type="text" value={fromState.lastName} onChange={updateFormData('lastName')} required={true} />
+        <input className="input" type="text" value={formState.lastName} onChange={updateFormData('lastName')} required={true} />
       </div>
     </div>
     <div className="field">
       <label className="label">Screen name</label>
       <div className="control">
-        <input className="input" type="text" value={fromState.screenName} onChange={updateFormData('screenName')} required={true} />
+        <input className="input" type="text" value={formState.screenName} onChange={updateFormData('screenName')} required={true} />
       </div>
     </div>
     <div className="field">
       <label className="label">Email</label>
       <div className="control">
-        <input className="input" type="email" value={fromState.email} onChange={updateFormData('email')} required={true} />
+        <input className="input" type="email" value={formState.email} onChange={updateFormData('email')} required={true} />
       </div>
     </div>
     <div className="field">
       <label className="label">Residence</label>
       <div className="control">
-        <input className="input" type="text" value={fromState.residence} onChange={updateFormData('residence')} required={true} />
+        <input className="input" type="text" value={formState.residence} onChange={updateFormData('residence')} required={true} />
       </div>
     </div>
     <div className="field">
       <label className="label">Phone</label>
       <div className="control">
-        <input className="input" type="text" value={fromState.phone} onChange={updateFormData('phone')} required={true} />
+        <input className="input" type="text" value={formState.phone} onChange={updateFormData('phone')} required={true} />
       </div>
     </div>
     <div className="field">
       <label className="label">Password</label>
       <div className="control">
-        <input className="input" type="password" value={fromState.password1} onChange={updateFormData('password1')} required={true} />
+        <input className="input" type="password" value={formState.password1} onChange={updateFormData('password1')} required={true} />
       </div>
     </div>
     <div className="field">
       <label className="label">Confirm password</label>
       <div className="control">
-        <input className="input" type="password" value={fromState.password2} onChange={updateFormData('password2')} required={true} />
+        <input className="input" type="password" value={formState.password2} onChange={updateFormData('password2')} required={true} />
       </div>
     </div>
     <div className="control">
@@ -124,7 +124,7 @@ export default ({ fromState, formErrors }: { fromState: CreateUserFormState, com
       </label>
     </div>
     <label className="checkbox">
-      <input type="checkbox" checked={fromState.isHYYMember} onChange={() => dispatch(modifyCreateUserFormDataAction, { isHYYMember: !fromState.isHYYMember })} />
+      <input type="checkbox" checked={formState.isHYYMember} onChange={() => dispatch(modifyCreateUserFormDataAction, { isHYYMember: !formState.isHYYMember })} />
       I'm a member of HYY
     </label>
     {
