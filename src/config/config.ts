@@ -17,7 +17,7 @@ const prodConfig: Config = {
 
 export const getEnvConfig = (): Config => {
   if (typeof window === 'undefined') {
-    return process.env.NODE_ENV === 'prod' ? prodConfig : devConfig
+    return process.env.ENV === 'prod' ? prodConfig : devConfig
   }
 
   return !window.location.host.startsWith('localhost') ? prodConfig : devConfig
