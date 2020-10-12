@@ -184,7 +184,8 @@ resource "aws_ecs_task_definition" "user_management_ui_task" {
       }
     },
     "environment": [
-      {"name": "PORT", "value": "3001"}
+      {"name": "PORT", "value": "3001"},
+      {"name": "NODE_ENV", "value": "prod"}
     ],
     "secrets": [
       {"name": "EMAIL_DISPATCHER_URL", "valueFrom": "${data.aws_ssm_parameter.email_dispatcher_url.arn}"},
