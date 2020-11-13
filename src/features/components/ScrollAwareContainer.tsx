@@ -13,8 +13,6 @@ type Props<T> = {
 export default <T extends Object>(props: Props<T>) => {
   const [offset, setOffset] = useState(props.itemsPerPage)
 
-  useEffect(() => setOffset(props.itemsPerPage), [props.items])
-
   useEffect(() => {
     offsetBus
       .skipDuplicates()
