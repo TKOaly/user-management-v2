@@ -5,6 +5,7 @@ import { changePageAction, modifyUserEditFormDataAction, updateUserAction, updat
 import { EditUser } from '../../stores/userEditStore'
 import { adminModif, jvModif, userModif } from '../../utils/userModificationLevels'
 import { paymentTypes, findPaymentType } from '../../fixtures/paymentTypes'
+import { format } from 'date-fns'
 
 export interface EditUserModalProps {
   user?: EditUser,
@@ -26,7 +27,7 @@ const AddPaymentBox = ({ user }: { user: EditUser }) =>
       <div className="content">
         <p><strong>Payment</strong></p>
         {user.payment ?
-          <p>Users payment valid until ${user.payment.valid_until}</p> :
+          <p>Users payment valid until {format(new Date(user.payment.valid_until), 'dd.LL.yyyy')}</p> :
           <>
             <div className="field">
               <label className="label">Membership duration</label>

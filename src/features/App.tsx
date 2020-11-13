@@ -3,8 +3,8 @@ import * as Bacon from 'baconjs'
 import { UserServiceUser } from '../services/tkoUserService'
 import NavBar from './components/NavBar'
 import UserSearchBar from './components/UserSearchBar'
-import { userSearchStore } from '../stores/userSearchStore'
-import UsersList, { UserListProps } from './components/UsersList'
+//mport { userSearchStore } from '../stores/userSearchStore'
+import UsersList from './components/UsersList'
 import { onPath, watchPageChanges } from '../router'
 import EditUserModal from './components/EditUserModal'
 import { pageNavigationStore } from '../stores/pageNavigationStore'
@@ -18,7 +18,7 @@ import { Nothing, Maybe } from 'purify-ts'
 
 export interface AppProps {
   user: UserServiceUser | null
-  userSearchState: UserListProps
+  userSearchState: UserServiceUser[]
   navigation: {
     path: string
   }
@@ -33,20 +33,24 @@ export interface AppProps {
   }
 }
 
-const adminTools = (users: UserServiceUser[]) =>
-  <>
-    <UserSearchBar />
-    <UsersList users={users} />
-  </>
+const adminTools = (users: UserServiceUser[]) => {
 
-const App = ({ user, userSearchState, navigation, userEditState, createUserState }: AppProps) => {
+  return (
+    <>
+      <UserSearchBar />
+      <UsersList initialUsers={users} />
+    </>
+  )
+}
+
+const App = ({ userSearchState, user, navigation, userEditState, createUserState }: AppProps) => {
   const pathCheck = onPath(navigation.path)
 
   return (
     <>
       <NavBar user={user} />
       <div className="container">
-        {(user && user.role !== 'kayttaja') && adminTools(userSearchState.users)}
+        {(user && user.role !== 'kayttaja') && adminTools(userSearchState)}
         {pathCheck('/edit/user/me', () => {
           if (!userEditState.editUser || userEditState.editUser.id !== user.id) {
             dispatch(setEditUserAction, user)
@@ -76,7 +80,7 @@ export default (initialState: AppProps) => {
       window.location.href = getUserServiceLoginUrl(Nothing)
     return Bacon.once(<></>)
   }
-  const userSearchStoreP = userSearchStore(initialState.userSearchState)
+
   const pageNavigationStoreP = pageNavigationStore(initialState.navigation)
   const userEditStoreP = userEditStore(initialState.userEditState)
   const createUserStoreP = createUserStore()
@@ -84,14 +88,13 @@ export default (initialState: AppProps) => {
   watchPageChanges()
 
   return Bacon.combineTemplate({
-    userSearchStoreState: userSearchStoreP,
     pageNavigationState: pageNavigationStoreP,
     userEditState: userEditStoreP,
     createUserState: createUserStoreP
-  }).map(({ userSearchStoreState, pageNavigationState, userEditState, createUserState }) => {
+  }).map(({ pageNavigationState, userEditState, createUserState }) => {
     const state: AppProps = {
+      userSearchState: initialState.userSearchState,
       ...initialState,
-      userSearchState: userSearchStoreState,
       navigation: pageNavigationState,
       userEditState,
       createUserState

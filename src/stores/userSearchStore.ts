@@ -6,10 +6,9 @@ import {
   UserServiceUser,
   conditionalUserFetch,
 } from '../services/tkoUserService'
-import { UserListProps } from '../features/components/UsersList'
 import { Nothing } from 'purify-ts'
 
-export const userSearchStore = (initialProps: UserListProps) => {
+export const userSearchStore = (initialProps: UserServiceUser[]) => {
   const userSearchFieldChangedS = actionStream(userSearchFieldChangedAction)
 
   const userSearchResultS = userSearchFieldChangedS
@@ -18,7 +17,7 @@ export const userSearchStore = (initialProps: UserListProps) => {
 
   return Bacon.update(initialProps, [
     userSearchResultS,
-    (_, newValue) => ({ users: newValue }),
+    (_, newValue) => newValue,
   ])
 }
 
