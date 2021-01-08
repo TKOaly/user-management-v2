@@ -1,4 +1,5 @@
-import { Maybe } from 'purify-ts'
+import { Option, map, getOrElse } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/function'
 
 interface Config {
   userServiceBaseUrl: string
@@ -6,7 +7,7 @@ interface Config {
 }
 
 const devConfig: Config = {
-  userServiceBaseUrl: 'http://localhost:4200',
+  userServiceBaseUrl: 'http://localhost:8080',
   serviceIdentifier: '65a0058d-f9da-4e76-a00a-6013300cab5f',
 }
 
@@ -23,10 +24,12 @@ export const getEnvConfig = (): Config => {
   return !window.location.host.startsWith('localhost') ? prodConfig : devConfig
 }
 
-export const getUserServiceLoginUrl = (redirect: Maybe<string>) => {
+export const getUserServiceLoginUrl = (redirect: Option<string>) => {
   const { userServiceBaseUrl, serviceIdentifier } = getEnvConfig()
-  const redirectPart = redirect
-    .map(url => `&loginRedirect=${url}`)
-    .orDefault('')
+  const redirectPart = pipe(
+    redirect,
+    map(url => `&loginRedirect=${url}`),
+    getOrElse(() => '')
+  )
   return `${userServiceBaseUrl}?serviceIdentifier=${serviceIdentifier}${redirectPart}`
 }

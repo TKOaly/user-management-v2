@@ -4,7 +4,8 @@ import { dispatch } from '../../actionDispatcher'
 import { modifyCreateUserFormDataAction, createUserAction, setUserMembershipPaymentFormStateAction, createUserMembershipPaymentAction } from '../../actions'
 import { UserServiceUser } from '../../services/tkoUserService'
 import { paymentTypes } from '../../fixtures/paymentTypes'
-import { Maybe } from 'purify-ts'
+import { Option, map, getOrElse, isNone } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/function'
 import { resolveMembershipType } from '../../utils/membershipTypeResolver'
 
 const updateFormData = (field: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -52,7 +53,7 @@ export const SuccessfulRegistration = ({ completedUser, paymentCreationStatus }:
         </div>
       </div>
 
-export default ({ formState, formErrors }: { formState: CreateUserFormState, completedUser?: UserServiceUser, formErrors: Maybe<string> }) =>
+export default ({ formState, formErrors }: { formState: CreateUserFormState, completedUser?: UserServiceUser, formErrors: Option<string> }) =>
   <div className="create-user-form">
     <h2 className="title">Create user</h2>
     <div className="field">
@@ -128,10 +129,13 @@ export default ({ formState, formErrors }: { formState: CreateUserFormState, com
       I'm a member of HYY
     </label>
     {
-      formErrors
-        .map(error => <p className="error">❌ {error}</p>)
-        .orDefault(null)
+      pipe(
+        formErrors,
+        map(error => <p className="error">❌ {error}</p>),
+        getOrElse(() => null)
+      )
+
     }
     <br />
-    <button disabled={formErrors.map(() => true).orDefault(false)} className="button is-primary" onClick={() => dispatch(createUserAction, null)}>Create</button>
+    <button disabled={!isNone(formErrors)} className="button is-primary" onClick={() => dispatch(createUserAction, null)}>Create</button>
   </div>

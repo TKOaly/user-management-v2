@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { getEnvConfig } from '../config/config'
-import { Maybe, List } from 'purify-ts'
+import { Option, fromNullable, chain, getOrElse } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/function'
+import { lookup } from 'fp-ts/Array'
 import { CreateUserPostBody } from '../stores/createUserStore'
 
 const config = getEnvConfig()
@@ -70,23 +72,24 @@ export interface UserPostBody {
   membership?: string
 }
 
-const resolveClientToken = (token: Maybe<string>) =>
+const resolveClientToken = (token: Option<string>) =>
   typeof window !== 'undefined'
-    ? Maybe.fromNullable(
-        window.document.cookie.split('; ').find(s => s.startsWith('token'))
-      ).chain(tokenCookie => List.at(1, tokenCookie.split('=')))
+    ? pipe(
+        fromNullable(window.document.cookie.split('; ').find(s => s.startsWith('token'))),
+        chain(tokenCookie => lookup(1, tokenCookie.split('=')))
+      )
     : token
 
-const withHeaders = (token: Maybe<string>) => ({
+const withHeaders = (token: Option<string>) => ({
   headers: {
-    Authorization: `Bearer ${resolveClientToken(token).orDefault('')}`,
+    Authorization: `Bearer ${getOrElse(() => '')(resolveClientToken(token))}`,
     'content-type': 'application/json',
     service: config.serviceIdentifier,
   },
 })
 
 export const getMe = (
-  token: Maybe<string>
+  token: Option<string>
 ): Promise<UserServicePayload<UserServiceUser>> =>
   client
     .get('/users/me', withHeaders(token))
@@ -95,7 +98,7 @@ export const getMe = (
 
 export const searchUsers = (
   searchTerm: string,
-  token: Maybe<string>
+  token: Option<string>
 ): Promise<UserServicePayload<UserServiceUser[]>> =>
   client
     .get('/users', { ...withHeaders(token), params: { searchTerm } })
@@ -103,7 +106,7 @@ export const searchUsers = (
 
 export const getUserById = (
   id: number,
-  token: Maybe<string>
+  token: Option<string>
 ): Promise<UserServicePayload<UserServiceUser | null>> =>
   client
     .get('/users/' + id, withHeaders(token))
@@ -112,7 +115,7 @@ export const getUserById = (
 
 export const getUserPayment = (
   userId: number,
-  token: Maybe<string>
+  token: Option<string>
 ): Promise<UserServicePayload<Payment>> =>
   client
     .get(`/users/${userId}/payments`, {
@@ -124,7 +127,7 @@ export const getUserPayment = (
 
 export const conditionalUserFetch = (
   conditions: string,
-  token: Maybe<string>
+  token: Option<string>
 ): Promise<UserServicePayload<UserServiceUser[]>> =>
   client
     .get('/users', { ...withHeaders(token), params: { conditions } })
@@ -133,7 +136,7 @@ export const conditionalUserFetch = (
 export const modifyUser = (
   id: number,
   body: UserPostBody,
-  token: Maybe<string>
+  token: Option<string>
 ): Promise<any> =>
   client
     .patch(`/users/${id}`, body, { ...withHeaders(token) })
@@ -141,17 +144,17 @@ export const modifyUser = (
 
 export const createNewUser = (
   body: CreateUserPostBody,
-  token: Maybe<string>
+  token: Option<string>
 ): Promise<UserServicePayload<UserServiceUser>> =>
   client.post('/users', body, withHeaders(token)).then(({ data }) => data)
 
-export const createMembershipPayment = (years: number, token: Maybe<string>) =>
+export const createMembershipPayment = (years: number, token: Option<string>) =>
   client
     .post('/payments/membership', { years }, withHeaders(token))
     .then(({ data }) => data)
 
 export const createPayment = (
   body: CreatePaymentBody,
-  token: Maybe<string>
+  token: Option<string>
 ): Promise<UserServicePayload<Payment>> =>
   client.post('/payments', body, withHeaders(token)).then(({ data }) => data)

@@ -1,14 +1,15 @@
-import { getMe, searchUsers, getUserPayment } from '../services/tkoUserService'
+import { getMe, searchUsers, getUserPayment, Payment } from '../services/tkoUserService'
 import { AppProps } from '../features/App'
-import { Maybe, Just } from 'purify-ts'
+import { Option, map, getOrElse, some, chain, fromNullable } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/function'
 
-const getUserList = (token: Maybe<string>) =>
+const getUserList = (token: Option<string>) =>
   searchUsers('', token).then(({ payload }) => payload)
 
 export const resolveInitialState = async (
-  token: Maybe<string>,
+  token: Option<string>,
   path: string,
-  editUserId: Maybe<string>
+  editUserId: Option<string>
 ): Promise<AppProps> => {
   const me = await getMe(token).then(({ payload }) => payload)
   if (!me)
@@ -24,16 +25,20 @@ export const resolveInitialState = async (
     }
 
   const userList = me.role !== 'kayttaja' ? await getUserList(token) : []
-  const editUser = editUserId.chain(id =>
-    id === 'me'
-      ? Just(me)
-      : Maybe.fromNullable(userList.find(u => u.id === Number(id)))
-  )
+  const editUser =
+    pipe(
+      editUserId,
+      chain(id =>
+        id === 'me'
+        ? some(me)
+        : fromNullable(userList.find(u => u.id === Number(id))))
+    )
 
-  const userPayment = editUser.map(
-    async usr =>
-      await getUserPayment(usr.id, token).then(({ payload }) => payload)
-  )
+  const userPayment =
+    pipe(
+      editUser,
+      map(async usr => await getUserPayment(usr.id, token).then(({ payload }) => payload))
+    )
 
   return {
     user: me,
@@ -42,12 +47,15 @@ export const resolveInitialState = async (
       path,
     },
     userEditState: {
-      editUser: await editUser
-        .map(async user => ({
+      editUser: await pipe(
+        editUser,
+        map(async user => ({
           ...user,
-          payment: await userPayment.extract(),
-        }))
-        .orDefault(Promise.resolve(null)),
+          payment: await getOrElse<Promise<Payment>>(
+            () => Promise.resolve(null))(userPayment),
+        })),
+        getOrElse(() => Promise.resolve(null))
+      )
     },
   }
 }

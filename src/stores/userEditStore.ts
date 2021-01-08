@@ -15,7 +15,7 @@ import {
   updateUserPaymentAction,
   markUserAsPaidAction,
 } from '../actions'
-import { Nothing } from 'purify-ts'
+import { none } from 'fp-ts/Option'
 import * as R from 'ramda'
 import { userModif, jvModif, adminModif } from '../utils/userModificationLevels'
 
@@ -113,7 +113,7 @@ export const userEditStore = (initialState: { editUser: EditUser | null }) => {
 
 const fetchPayments = (userId: number) =>
   Bacon.fromPromise(
-    getUserPayment(userId, Nothing).then(({ payload }) => payload)
+    getUserPayment(userId, none).then(({ payload }) => payload)
   )
 
 const updateUser = (
@@ -144,6 +144,6 @@ const updateUser = (
           [R.T, R.always({})],
         ])(modifier.role)
   return Bacon.fromPromise(
-    modifyUser(id, allowedBodyData, Nothing).then(({ payload }) => payload)
+    modifyUser(id, allowedBodyData, none).then(({ payload }) => payload)
   )
 }

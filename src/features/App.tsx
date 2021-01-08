@@ -14,7 +14,7 @@ import { setEditUserAction } from '../actions'
 import { getUserServiceLoginUrl } from '../config/config'
 import NewUserForm, { SuccessfulRegistration } from './components/NewUserForm'
 import createUserStore, { CreateUserFormState, PaymentCreationStatus } from '../stores/createUserStore'
-import { Nothing, Maybe } from 'purify-ts'
+import { Option, none } from 'fp-ts/Option'
 
 export interface AppProps {
   user: UserServiceUser | null
@@ -28,7 +28,7 @@ export interface AppProps {
   createUserState?: {
     createUserFormState: CreateUserFormState
     completedUser?: UserServiceUser
-    formErrors: Maybe<string>
+    formErrors: Option<string>
     paymentCreationStatus: PaymentCreationStatus
   }
 }
@@ -77,7 +77,7 @@ const App = ({ userSearchState, user, navigation, userEditState, createUserState
 export default (initialState: AppProps) => {
   if (!initialState.user && initialState.navigation.path !== '/create') {
     if (typeof window !== 'undefined')
-      window.location.href = getUserServiceLoginUrl(Nothing)
+      window.location.href = getUserServiceLoginUrl(none)
     return Bacon.once(<></>)
   }
 

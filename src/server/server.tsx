@@ -6,7 +6,7 @@ import app from '../features/App'
 import { searchUsers, getUserPayment, conditionalUserFetch, modifyUser, createNewUser, CreatePaymentBody, getMe, createPayment } from '../services/tkoUserService'
 import cookieParser from 'cookie-parser'
 import { resolveInitialState } from './initialStateResolver'
-import { Maybe } from 'purify-ts'
+import { fromNullable } from 'fp-ts/Option'
 import { findPaymentType } from '../fixtures/paymentTypes'
 import { setMonth, setDate, addYears, setHours, setMinutes, setSeconds, format } from 'date-fns/fp'
 import { pipe } from 'ramda'
@@ -26,7 +26,7 @@ server.use(logger)
 
 const renderApp = async (req: express.Request, res: express.Response) => {
   try {
-    const initialState = await resolveInitialState(Maybe.fromNullable(req.cookies.token), req.path, Maybe.fromNullable(req.params.id))
+    const initialState = await resolveInitialState(fromNullable(req.cookies.token), req.path, fromNullable(req.params.id))
     app(initialState).onValue(root => {
       const body = ReactServer.renderToString(<>{root}</>)
       res.send(createTemplate({
@@ -50,13 +50,13 @@ server.get('/ping', (req, res) => res.json({ ok: true }))
 server.get(
   '/api/users', (req, res) =>
   req.query.conditions ?
-    conditionalUserFetch(req.query.conditions.toString(), Maybe.fromNullable(req.cookies.token))
+    conditionalUserFetch(req.query.conditions.toString(), fromNullable(req.cookies.token))
       .then(users => res.json(users))
       .catch(e => {
         console.error(e)
         res.status(500).json({ error: 'internal server error' })
       }) :
-    searchUsers(req.query.searchTerm.toString(), Maybe.fromNullable(req.cookies.token))
+    searchUsers(req.query.searchTerm.toString(), fromNullable(req.cookies.token))
       .then(users => res.json(users))
       .catch(e => {
         console.error(e)
@@ -66,7 +66,7 @@ server.get(
 
 server.get(
   '/api/users/:id/payments', (req, res) =>
-  getUserPayment(Number(req.params.id), Maybe.fromNullable(req.cookies.token))
+  getUserPayment(Number(req.params.id), fromNullable(req.cookies.token))
     .then(payment => res.json(payment))
     .catch(e => {
       console.error(e)
@@ -75,7 +75,7 @@ server.get(
 )
 
 server.patch('/api/users/:id', (req, res) =>
-  modifyUser(Number(req.params.id), req.body, Maybe.fromNullable(req.cookies.token))
+  modifyUser(Number(req.params.id), req.body, fromNullable(req.cookies.token))
     .then(result => res.json(result))
     .catch(e => {
       console.error(e)
@@ -84,7 +84,7 @@ server.patch('/api/users/:id', (req, res) =>
 )
 
 server.post('/api/users', (req, res) =>
-  createNewUser(req.body, Maybe.fromNullable(req.cookies.token))
+  createNewUser(req.body, fromNullable(req.cookies.token))
     .then(result => res.json(result))
     .catch(e => {
       console.error(e)
@@ -93,7 +93,7 @@ server.post('/api/users', (req, res) =>
 )
 
 server.post('/api/payments/membership', async (req, res) => {
-  const authorizedUser = await getMe(Maybe.fromNullable(req.cookies.token))
+  const authorizedUser = await getMe(fromNullable(req.cookies.token))
   const postBody: CreatePaymentBody = {
     amount: findPaymentType(req.body.years).price,
     payer_id: authorizedUser.payload.id,
@@ -114,7 +114,7 @@ server.post('/api/payments/membership', async (req, res) => {
     )(new Date())
   }
 
-  createPayment(postBody, Maybe.fromNullable(req.cookies.token))
+  createPayment(postBody, fromNullable(req.cookies.token))
     .then(async r => {
       await sendPaymentInstrtuctions(authorizedUser.payload.email, r.payload)
       return r
