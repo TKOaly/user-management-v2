@@ -6,7 +6,7 @@ interface Config {
 }
 
 const devConfig: Config = {
-  userServiceBaseUrl: 'http://localhost:4200',
+  userServiceBaseUrl: 'http://localhost:8080',
   serviceIdentifier: '65a0058d-f9da-4e76-a00a-6013300cab5f',
 }
 

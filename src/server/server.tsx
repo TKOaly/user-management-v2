@@ -13,6 +13,7 @@ import { pipe } from 'ramda'
 import { resolveMembershipType } from '../utils/membershipTypeResolver'
 import { sendPaymentInstrtuctions } from '../services/emailService'
 import morgan from 'morgan'
+import { withErrorHandler } from '../utils/proxyErrorHandler'
 
 const PORT = process.env.PORT || 3000
 const server = express()
@@ -47,52 +48,38 @@ server.get('/create', (req, res) => renderApp(req, res))
 server.get('/create/complete', (req, res) => renderApp(req, res))
 server.get('/ping', (req, res) => res.json({ ok: true }))
 
-server.get(
-  '/api/users', (req, res) =>
-  req.query.conditions ?
-    conditionalUserFetch(req.query.conditions.toString(), Maybe.fromNullable(req.cookies.token))
-      .then(users => res.json(users))
-      .catch(e => {
-        console.error(e)
-        res.status(500).json({ error: 'internal server error' })
-      }) :
-    searchUsers(req.query.searchTerm.toString(), Maybe.fromNullable(req.cookies.token))
-      .then(users => res.json(users))
-      .catch(e => {
-        console.error(e)
-        res.status(500).json({ error: 'internal server error' })
-      })
+server.get('/api/users', withErrorHandler((req, res) =>
+  req.query.conditions
+    ? conditionalUserFetch(
+        req.query.conditions.toString(),
+        Maybe.fromNullable(req.cookies.token)
+      )
+        .then(users => res.json(users))
+    : searchUsers(
+        req.query.searchTerm.toString(),
+        Maybe.fromNullable(req.cookies.token)
+      )
+        .then(users => res.json(users))
+)
 )
 
 server.get(
-  '/api/users/:id/payments', (req, res) =>
+  '/api/users/:id/payments', withErrorHandler((req, res) =>
   getUserPayment(Number(req.params.id), Maybe.fromNullable(req.cookies.token))
     .then(payment => res.json(payment))
-    .catch(e => {
-      console.error(e)
-      res.status(500).json({ error: 'internal server error' })
-    })
-)
+))
 
-server.patch('/api/users/:id', (req, res) =>
+server.patch('/api/users/:id', withErrorHandler((req, res) =>
   modifyUser(Number(req.params.id), req.body, Maybe.fromNullable(req.cookies.token))
     .then(result => res.json(result))
-    .catch(e => {
-      console.error(e)
-      res.status(500).json({ error: 'internal server error' })
-    })
-)
+))
 
-server.post('/api/users', (req, res) =>
+server.post('/api/users', withErrorHandler((req, res) =>
   createNewUser(req.body, Maybe.fromNullable(req.cookies.token))
     .then(result => res.json(result))
-    .catch(e => {
-      console.error(e)
-      res.status(500).json({ error: 'internal server error' })
-    })
-)
+))
 
-server.post('/api/payments/membership', async (req, res) => {
+server.post('/api/payments/membership', withErrorHandler(async (req, res) => {
   const authorizedUser = await getMe(Maybe.fromNullable(req.cookies.token))
   const postBody: CreatePaymentBody = {
     amount: findPaymentType(req.body.years).price,
@@ -114,16 +101,12 @@ server.post('/api/payments/membership', async (req, res) => {
     )(new Date())
   }
 
-  createPayment(postBody, Maybe.fromNullable(req.cookies.token))
+  return createPayment(postBody, Maybe.fromNullable(req.cookies.token))
     .then(async r => {
       await sendPaymentInstrtuctions(authorizedUser.payload.email, r.payload)
       return r
     })
     .then(payment => res.json(payment))
-    .catch(e => {
-      console.error(e)
-      res.status(500).json({ error: 'internal server error' })
-    })
-})
+}))
 
 server.listen(PORT, () => console.log('🍺 Listening on port', PORT))
