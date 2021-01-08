@@ -112,9 +112,7 @@ export const userEditStore = (initialState: { editUser: EditUser | null }) => {
 }
 
 const fetchPayments = (userId: number) =>
-  Bacon.fromPromise(
-    getUserPayment(userId, none).then(({ payload }) => payload)
-  )
+  Bacon.fromPromise(getUserPayment(userId, none).then(({ payload }) => payload))
 
 const updateUser = (
   id: number,

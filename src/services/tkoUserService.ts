@@ -75,7 +75,9 @@ export interface UserPostBody {
 const resolveClientToken = (token: Option<string>) =>
   typeof window !== 'undefined'
     ? pipe(
-        fromNullable(window.document.cookie.split('; ').find(s => s.startsWith('token'))),
+        fromNullable(
+          window.document.cookie.split('; ').find(s => s.startsWith('token'))
+        ),
         chain(tokenCookie => lookup(1, tokenCookie.split('=')))
       )
     : token

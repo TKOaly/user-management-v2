@@ -24,7 +24,11 @@ export default ({ initialUsers }: { initialUsers: UserServiceUser[] }) => {
   const users = useStore(userSearchStore, initialUsers)
   return (
     <div className="panel">
-      <ScrollAwareContainer items={users} itemsPerPage={20} renderFn={renderItem} ></ScrollAwareContainer>
+      <ScrollAwareContainer
+        items={users}
+        itemsPerPage={20}
+        renderFn={renderItem}
+      ></ScrollAwareContainer>
     </div>
   )
 }

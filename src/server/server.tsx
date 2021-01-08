@@ -3,12 +3,29 @@ import React from 'react'
 import ReactServer from 'react-dom/server'
 import { createTemplate } from './basePage'
 import app from '../features/App'
-import { searchUsers, getUserPayment, conditionalUserFetch, modifyUser, createNewUser, CreatePaymentBody, getMe, createPayment } from '../services/tkoUserService'
+import {
+  searchUsers,
+  getUserPayment,
+  conditionalUserFetch,
+  modifyUser,
+  createNewUser,
+  CreatePaymentBody,
+  getMe,
+  createPayment,
+} from '../services/tkoUserService'
 import cookieParser from 'cookie-parser'
 import { resolveInitialState } from './initialStateResolver'
 import { fromNullable } from 'fp-ts/Option'
 import { findPaymentType } from '../fixtures/paymentTypes'
-import { setMonth, setDate, addYears, setHours, setMinutes, setSeconds, format } from 'date-fns/fp'
+import {
+  setMonth,
+  setDate,
+  addYears,
+  setHours,
+  setMinutes,
+  setSeconds,
+  format,
+} from 'date-fns/fp'
 import { pipe } from 'ramda'
 import { resolveMembershipType } from '../utils/membershipTypeResolver'
 import { sendPaymentInstrtuctions } from '../services/emailService'
@@ -26,14 +43,20 @@ server.use(logger)
 
 const renderApp = async (req: express.Request, res: express.Response) => {
   try {
-    const initialState = await resolveInitialState(fromNullable(req.cookies.token), req.path, fromNullable(req.params.id))
+    const initialState = await resolveInitialState(
+      fromNullable(req.cookies.token),
+      req.path,
+      fromNullable(req.params.id)
+    )
     app(initialState).onValue(root => {
       const body = ReactServer.renderToString(<>{root}</>)
-      res.send(createTemplate({
-        title: 'TKO-äly user mngmnt',
-        body,
-        initialState: JSON.stringify(initialState)
-      }))
+      res.send(
+        createTemplate({
+          title: 'TKO-äly user mngmnt',
+          body,
+          initialState: JSON.stringify(initialState),
+        })
+      )
     })
   } catch (e) {
     console.error(e)
@@ -47,25 +70,29 @@ server.get('/create', (req, res) => renderApp(req, res))
 server.get('/create/complete', (req, res) => renderApp(req, res))
 server.get('/ping', (req, res) => res.json({ ok: true }))
 
-server.get(
-  '/api/users', (req, res) =>
-  req.query.conditions ?
-    conditionalUserFetch(req.query.conditions.toString(), fromNullable(req.cookies.token))
-      .then(users => res.json(users))
-      .catch(e => {
-        console.error(e)
-        res.status(500).json({ error: 'internal server error' })
-      }) :
-    searchUsers(req.query.searchTerm.toString(), fromNullable(req.cookies.token))
-      .then(users => res.json(users))
-      .catch(e => {
-        console.error(e)
-        res.status(500).json({ error: 'internal server error' })
-      })
+server.get('/api/users', (req, res) =>
+  req.query.conditions
+    ? conditionalUserFetch(
+        req.query.conditions.toString(),
+        fromNullable(req.cookies.token)
+      )
+        .then(users => res.json(users))
+        .catch(e => {
+          console.error(e)
+          res.status(500).json({ error: 'internal server error' })
+        })
+    : searchUsers(
+        req.query.searchTerm.toString(),
+        fromNullable(req.cookies.token)
+      )
+        .then(users => res.json(users))
+        .catch(e => {
+          console.error(e)
+          res.status(500).json({ error: 'internal server error' })
+        })
 )
 
-server.get(
-  '/api/users/:id/payments', (req, res) =>
+server.get('/api/users/:id/payments', (req, res) =>
   getUserPayment(Number(req.params.id), fromNullable(req.cookies.token))
     .then(payment => res.json(payment))
     .catch(e => {
@@ -111,7 +138,7 @@ server.post('/api/payments/membership', async (req, res) => {
       setSeconds(0),
       addYears(req.body.years),
       format('y-M-dd hh:mm:ss')
-    )(new Date())
+    )(new Date()),
   }
 
   createPayment(postBody, fromNullable(req.cookies.token))

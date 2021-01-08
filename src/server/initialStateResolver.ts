@@ -1,4 +1,9 @@
-import { getMe, searchUsers, getUserPayment, Payment } from '../services/tkoUserService'
+import {
+  getMe,
+  searchUsers,
+  getUserPayment,
+  Payment,
+} from '../services/tkoUserService'
 import { AppProps } from '../features/App'
 import { Option, map, getOrElse, some, chain, fromNullable } from 'fp-ts/Option'
 import { pipe } from 'fp-ts/function'
@@ -25,20 +30,22 @@ export const resolveInitialState = async (
     }
 
   const userList = me.role !== 'kayttaja' ? await getUserList(token) : []
-  const editUser =
-    pipe(
-      editUserId,
-      chain(id =>
-        id === 'me'
+  const editUser = pipe(
+    editUserId,
+    chain(id =>
+      id === 'me'
         ? some(me)
-        : fromNullable(userList.find(u => u.id === Number(id))))
+        : fromNullable(userList.find(u => u.id === Number(id)))
     )
+  )
 
-  const userPayment =
-    pipe(
-      editUser,
-      map(async usr => await getUserPayment(usr.id, token).then(({ payload }) => payload))
+  const userPayment = pipe(
+    editUser,
+    map(
+      async usr =>
+        await getUserPayment(usr.id, token).then(({ payload }) => payload)
     )
+  )
 
   return {
     user: me,
@@ -51,11 +58,12 @@ export const resolveInitialState = async (
         editUser,
         map(async user => ({
           ...user,
-          payment: await getOrElse<Promise<Payment>>(
-            () => Promise.resolve(null))(userPayment),
+          payment: await getOrElse<Promise<Payment>>(() =>
+            Promise.resolve(null)
+          )(userPayment),
         })),
         getOrElse(() => Promise.resolve(null))
-      )
+      ),
     },
   }
 }
