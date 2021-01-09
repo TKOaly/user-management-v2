@@ -24,7 +24,7 @@ export const withErrorHandler = (
     handleError(errorResponse =>
       errorResponse
         .ifJust(({ status, body }) => response.status(status).json(body))
-        .ifNothing(() => response.status(500))
+        .ifNothing(() => response.sendStatus(500))
     )
   )
 }
