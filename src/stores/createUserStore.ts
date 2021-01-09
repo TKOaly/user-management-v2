@@ -10,9 +10,9 @@ import {
   createNewUser,
   createMembershipPayment,
 } from '../services/tkoUserService'
-import { Nothing, Just } from 'purify-ts'
 import { getUserServiceLoginUrl } from '../config/config'
 import userValidator from '../validation/userValidator'
+import { some, none } from 'fp-ts/Option'
 
 export interface CreateUserFormState {
   username: string
@@ -80,7 +80,7 @@ export default () => {
     .onValue(() => {
       if (typeof window !== 'undefined') {
         window.location.href = getUserServiceLoginUrl(
-          Just(`${window.location.origin}/create/complete`)
+          some(`${window.location.origin}/create/complete`)
         )
       }
     })
@@ -90,12 +90,12 @@ export default () => {
     .map(v => {
       const validation = userValidator.validate(v)
       return validation.error
-        ? Just(validation.error.message)
+        ? some(validation.error.message)
         : validation.errors
-        ? Just(validation.errors.message)
-        : Nothing
+        ? some(validation.errors.message)
+        : none
     })
-    .toProperty(Nothing)
+    .toProperty(none)
 
   const createMembershipPaymentStatusP = modifyMembershipPaymentP
     .sampledBy(createUserMembershipPaymentS)
@@ -135,10 +135,10 @@ const createUser = (formData: CreateUserFormState) =>
         password1: formData.password1,
         password2: formData.password2,
       },
-      Nothing
+      none
     )
   )
 
 const createBankPayment = (years: number) => {
-  return Bacon.fromPromise(createMembershipPayment(years, Nothing))
+  return Bacon.fromPromise(createMembershipPayment(years, none))
 }

@@ -1,6 +1,7 @@
-import { Maybe } from 'purify-ts'
+import { Option, fold, map, fromNullable } from 'fp-ts/Option'
 import { AxiosError } from 'axios'
 import { Request, Response } from 'express'
+import { pipe } from 'fp-ts/lib/function'
 
 type RequestErrorResponse = {
   status: number
@@ -8,8 +9,8 @@ type RequestErrorResponse = {
 }
 
 const withLogAndHandler = (
-  f: (error: AxiosError) => Maybe<RequestErrorResponse>
-) => (handler: (response: Maybe<RequestErrorResponse>) => void) => (
+  f: (error: AxiosError) => Option<RequestErrorResponse>
+) => (handler: (response: Option<RequestErrorResponse>) => void) => (
   error: AxiosError
 ) => {
   console.error(error)
@@ -21,19 +22,23 @@ export const withErrorHandler = (
   handler: (req: Request, res: Response) => Promise<any>
 ) => (request: Request, response: Response) => {
   handler(request, response).catch(
-    handleError(errorResponse =>
-      errorResponse
-        .ifJust(({ status, body }) => response.status(status).json(body))
-        .ifNothing(() => response.sendStatus(500))
+    handleError(
+      fold(
+        () => response.sendStatus(500),
+        ({ status, body }) => response.status(status).json(body)
+      )
     )
   )
 }
 
 export const handleError = withLogAndHandler(error =>
-  Maybe.fromNullable(error.response).map(({ status, statusText }) => ({
-    status,
-    body: {
-      message: statusText,
-    },
-  }))
+  pipe(
+    fromNullable(error.response),
+    map(({ status, statusText }) => ({
+      status,
+      body: {
+        message: statusText,
+      },
+    }))
+  )
 )

@@ -15,7 +15,7 @@ import {
 } from '../services/tkoUserService'
 import cookieParser from 'cookie-parser'
 import { resolveInitialState } from './initialStateResolver'
-import { Maybe } from 'purify-ts'
+import { fromNullable } from 'fp-ts/Option'
 import { findPaymentType } from '../fixtures/paymentTypes'
 import {
   setMonth,
@@ -45,9 +45,9 @@ server.use(logger)
 const renderApp = async (req: express.Request, res: express.Response) => {
   try {
     const initialState = await resolveInitialState(
-      Maybe.fromNullable(req.cookies.token),
+      fromNullable(req.cookies.token),
       req.path,
-      Maybe.fromNullable(req.params.id)
+      fromNullable(req.params.id)
     )
     app(initialState).onValue(root => {
       const body = ReactServer.renderToString(<>{root}</>)
@@ -77,11 +77,11 @@ server.get(
     req.query.conditions
       ? conditionalUserFetch(
           req.query.conditions.toString(),
-          Maybe.fromNullable(req.cookies.token)
+          fromNullable(req.cookies.token)
         ).then(users => res.json(users))
       : searchUsers(
           req.query.searchTerm.toString(),
-          Maybe.fromNullable(req.cookies.token)
+          fromNullable(req.cookies.token)
         ).then(users => res.json(users))
   )
 )
@@ -91,7 +91,7 @@ server.get(
   withErrorHandler((req, res) =>
     getUserPayment(
       Number(req.params.id),
-      Maybe.fromNullable(req.cookies.token)
+      fromNullable(req.cookies.token)
     ).then(payment => res.json(payment))
   )
 )
@@ -102,7 +102,7 @@ server.patch(
     modifyUser(
       Number(req.params.id),
       req.body,
-      Maybe.fromNullable(req.cookies.token)
+      fromNullable(req.cookies.token)
     ).then(result => res.json(result))
   )
 )
@@ -110,17 +110,16 @@ server.patch(
 server.post(
   '/api/users',
   withErrorHandler((req, res) =>
-    createNewUser(
-      req.body,
-      Maybe.fromNullable(req.cookies.token)
-    ).then(result => res.json(result))
+    createNewUser(req.body, fromNullable(req.cookies.token)).then(result =>
+      res.json(result)
+    )
   )
 )
 
 server.post(
   '/api/payments/membership',
   withErrorHandler(async (req, res) => {
-    const authorizedUser = await getMe(Maybe.fromNullable(req.cookies.token))
+    const authorizedUser = await getMe(fromNullable(req.cookies.token))
     const postBody: CreatePaymentBody = {
       amount: findPaymentType(req.body.years).price,
       payer_id: authorizedUser.payload.id,
@@ -141,7 +140,7 @@ server.post(
       )(new Date()),
     }
 
-    return createPayment(postBody, Maybe.fromNullable(req.cookies.token))
+    return createPayment(postBody, fromNullable(req.cookies.token))
       .then(async r => {
         await sendPaymentInstrtuctions(authorizedUser.payload.email, r.payload)
         return r
