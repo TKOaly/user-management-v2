@@ -2,7 +2,7 @@ import React from 'react'
 import { dispatch } from '../../actionDispatcher'
 import { userSearchFieldChangedAction } from '../../actions'
 
-export default () =>
+export default () => (
   <div className="user-serach-box">
     <h3>Search filters:</h3>
     <p>Empty search term lists all users.</p>
@@ -37,3 +37,4 @@ export default () =>
       onChange={e => dispatch(userSearchFieldChangedAction, e.target.value)}
     />
   </div>
+)

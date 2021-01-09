@@ -13,8 +13,11 @@ import { dispatch } from '../actionDispatcher'
 import { setEditUserAction } from '../actions'
 import { getUserServiceLoginUrl } from '../config/config'
 import NewUserForm, { SuccessfulRegistration } from './components/NewUserForm'
-import createUserStore, { CreateUserFormState, PaymentCreationStatus } from '../stores/createUserStore'
-import { Nothing, Maybe } from 'purify-ts'
+import createUserStore, {
+  CreateUserFormState,
+  PaymentCreationStatus,
+} from '../stores/createUserStore'
+import { Option, none } from 'fp-ts/Option'
 
 export interface AppProps {
   user: UserServiceUser | null
@@ -28,13 +31,12 @@ export interface AppProps {
   createUserState?: {
     createUserFormState: CreateUserFormState
     completedUser?: UserServiceUser
-    formErrors: Maybe<string>
+    formErrors: Option<string>
     paymentCreationStatus: PaymentCreationStatus
   }
 }
 
 const adminTools = (users: UserServiceUser[]) => {
-
   return (
     <>
       <UserSearchBar />
@@ -43,31 +45,58 @@ const adminTools = (users: UserServiceUser[]) => {
   )
 }
 
-const App = ({ userSearchState, user, navigation, userEditState, createUserState }: AppProps) => {
+const App = ({
+  userSearchState,
+  user,
+  navigation,
+  userEditState,
+  createUserState,
+}: AppProps) => {
   const pathCheck = onPath(navigation.path)
 
   return (
     <>
       <NavBar user={user} />
       <div className="container">
-        {(user && user.role !== 'kayttaja') && adminTools(userSearchState)}
+        {user && user.role !== 'kayttaja' && adminTools(userSearchState)}
         {pathCheck('/edit/user/me', () => {
-          if (!userEditState.editUser || userEditState.editUser.id !== user.id) {
+          if (
+            !userEditState.editUser ||
+            userEditState.editUser.id !== user.id
+          ) {
             dispatch(setEditUserAction, user)
             return null
           }
-          return <EditUserModal user={userEditState.editUser} authorizedUser={user} />
+          return (
+            <EditUserModal
+              user={userEditState.editUser}
+              authorizedUser={user}
+            />
+          )
         })}
-        {pathCheck('/edit/user/:id<\\d+>', ({ id }: { id: string }) => <EditUserModal user={userEditState.editUser} authorizedUser={user} />)}
-        {pathCheck('/create', () =>
-          createUserState &&
-          <NewUserForm
-            formState={createUserState.createUserFormState}
-            completedUser={createUserState.completedUser}
-            formErrors={createUserState.formErrors}
-          />)}
-        {pathCheck('/create/complete', () =>
-          user && <SuccessfulRegistration completedUser={user} paymentCreationStatus={createUserState.paymentCreationStatus} />
+        {pathCheck('/edit/user/:id<\\d+>', ({ id }: { id: string }) => (
+          <EditUserModal user={userEditState.editUser} authorizedUser={user} />
+        ))}
+        {pathCheck(
+          '/create',
+          () =>
+            createUserState && (
+              <NewUserForm
+                formState={createUserState.createUserFormState}
+                completedUser={createUserState.completedUser}
+                formErrors={createUserState.formErrors}
+              />
+            )
+        )}
+        {pathCheck(
+          '/create/complete',
+          () =>
+            user && (
+              <SuccessfulRegistration
+                completedUser={user}
+                paymentCreationStatus={createUserState.paymentCreationStatus}
+              />
+            )
         )}
       </div>
     </>
@@ -77,7 +106,7 @@ const App = ({ userSearchState, user, navigation, userEditState, createUserState
 export default (initialState: AppProps) => {
   if (!initialState.user && initialState.navigation.path !== '/create') {
     if (typeof window !== 'undefined')
-      window.location.href = getUserServiceLoginUrl(Nothing)
+      window.location.href = getUserServiceLoginUrl(none)
     return Bacon.once(<></>)
   }
 
@@ -90,14 +119,14 @@ export default (initialState: AppProps) => {
   return Bacon.combineTemplate({
     pageNavigationState: pageNavigationStoreP,
     userEditState: userEditStoreP,
-    createUserState: createUserStoreP
+    createUserState: createUserStoreP,
   }).map(({ pageNavigationState, userEditState, createUserState }) => {
     const state: AppProps = {
       userSearchState: initialState.userSearchState,
       ...initialState,
       navigation: pageNavigationState,
       userEditState,
-      createUserState
+      createUserState,
     }
 
     return <App {...state} />
