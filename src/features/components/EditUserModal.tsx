@@ -37,10 +37,16 @@ const AddPaymentBox = ({ user }: { user: EditUser }) => (
           <strong>Payment</strong>
         </p>
         {user.payment ? (
-          <p>
-            Users payment valid until{' '}
-            {format(new Date(user.payment.valid_until), 'dd.LL.yyyy')}
-          </p>
+          <>
+            <p>
+              Users payment valid until{' '}
+              {format(new Date(user.payment.valid_until), 'dd.LL.yyyy')}
+            </p>
+            <p>
+              Membership applied for:{' '}
+              <b>{user.payment.membership_applied_for}</b>
+            </p>
+          </>
         ) : (
           <>
             <div className="field">
