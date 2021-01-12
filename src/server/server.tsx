@@ -30,6 +30,7 @@ import { pipe } from 'ramda'
 import { resolveMembershipType } from '../utils/membershipTypeResolver'
 import { sendPaymentInstrtuctions } from '../services/emailService'
 import morgan from 'morgan'
+import { withErrorHandler } from '../utils/proxyErrorHandler'
 
 const PORT = process.env.PORT || 3000
 const server = express()
@@ -70,87 +71,82 @@ server.get('/create', (req, res) => renderApp(req, res))
 server.get('/create/complete', (req, res) => renderApp(req, res))
 server.get('/ping', (req, res) => res.json({ ok: true }))
 
-server.get('/api/users', (req, res) =>
-  req.query.conditions
-    ? conditionalUserFetch(
-        req.query.conditions.toString(),
-        fromNullable(req.cookies.token)
-      )
-        .then(users => res.json(users))
-        .catch(e => {
-          console.error(e)
-          res.status(500).json({ error: 'internal server error' })
-        })
-    : searchUsers(
-        req.query.searchTerm.toString(),
-        fromNullable(req.cookies.token)
-      )
-        .then(users => res.json(users))
-        .catch(e => {
-          console.error(e)
-          res.status(500).json({ error: 'internal server error' })
-        })
+server.get(
+  '/api/users',
+  withErrorHandler((req, res) =>
+    req.query.conditions
+      ? conditionalUserFetch(
+          req.query.conditions.toString(),
+          fromNullable(req.cookies.token)
+        ).then(users => res.json(users))
+      : searchUsers(
+          req.query.searchTerm.toString(),
+          fromNullable(req.cookies.token)
+        ).then(users => res.json(users))
+  )
 )
 
-server.get('/api/users/:id/payments', (req, res) =>
-  getUserPayment(Number(req.params.id), fromNullable(req.cookies.token))
-    .then(payment => res.json(payment))
-    .catch(e => {
-      console.error(e)
-      res.status(500).json({ error: 'internal server error' })
-    })
+server.get(
+  '/api/users/:id/payments',
+  withErrorHandler((req, res) =>
+    getUserPayment(
+      Number(req.params.id),
+      fromNullable(req.cookies.token)
+    ).then(payment => res.json(payment))
+  )
 )
 
-server.patch('/api/users/:id', (req, res) =>
-  modifyUser(Number(req.params.id), req.body, fromNullable(req.cookies.token))
-    .then(result => res.json(result))
-    .catch(e => {
-      console.error(e)
-      res.status(500).json({ error: 'internal server error' })
-    })
+server.patch(
+  '/api/users/:id',
+  withErrorHandler((req, res) =>
+    modifyUser(
+      Number(req.params.id),
+      req.body,
+      fromNullable(req.cookies.token)
+    ).then(result => res.json(result))
+  )
 )
 
-server.post('/api/users', (req, res) =>
-  createNewUser(req.body, fromNullable(req.cookies.token))
-    .then(result => res.json(result))
-    .catch(e => {
-      console.error(e)
-      res.status(500).json({ error: 'internal server error' })
-    })
+server.post(
+  '/api/users',
+  withErrorHandler((req, res) =>
+    createNewUser(req.body, fromNullable(req.cookies.token)).then(result =>
+      res.json(result)
+    )
+  )
 )
 
-server.post('/api/payments/membership', async (req, res) => {
-  const authorizedUser = await getMe(fromNullable(req.cookies.token))
-  const postBody: CreatePaymentBody = {
-    amount: findPaymentType(req.body.years).price,
-    payer_id: authorizedUser.payload.id,
-    payment_type: 'tilisiirto',
-    membership_applied_for: resolveMembershipType(
-      authorizedUser.payload.isTKTL,
-      authorizedUser.payload.isHYYMember,
-      authorizedUser.payload.isHyStaff
-    ),
-    valid_until: pipe(
-      setMonth(7),
-      setDate(1),
-      setHours(0),
-      setMinutes(0),
-      setSeconds(0),
-      addYears(req.body.years),
-      format('y-M-dd hh:mm:ss')
-    )(new Date()),
-  }
+server.post(
+  '/api/payments/membership',
+  withErrorHandler(async (req, res) => {
+    const authorizedUser = await getMe(fromNullable(req.cookies.token))
+    const postBody: CreatePaymentBody = {
+      amount: findPaymentType(req.body.years).price,
+      payer_id: authorizedUser.payload.id,
+      payment_type: 'tilisiirto',
+      membership_applied_for: resolveMembershipType(
+        authorizedUser.payload.isTKTL,
+        authorizedUser.payload.isHYYMember,
+        authorizedUser.payload.isHyStaff
+      ),
+      valid_until: pipe(
+        setMonth(7),
+        setDate(1),
+        setHours(0),
+        setMinutes(0),
+        setSeconds(0),
+        addYears(req.body.years),
+        format('y-M-dd hh:mm:ss')
+      )(new Date()),
+    }
 
-  createPayment(postBody, fromNullable(req.cookies.token))
-    .then(async r => {
-      await sendPaymentInstrtuctions(authorizedUser.payload.email, r.payload)
-      return r
-    })
-    .then(payment => res.json(payment))
-    .catch(e => {
-      console.error(e)
-      res.status(500).json({ error: 'internal server error' })
-    })
-})
+    return createPayment(postBody, fromNullable(req.cookies.token))
+      .then(async r => {
+        await sendPaymentInstrtuctions(authorizedUser.payload.email, r.payload)
+        return r
+      })
+      .then(payment => res.json(payment))
+  })
+)
 
 server.listen(PORT, () => console.log('🍺 Listening on port', PORT))
