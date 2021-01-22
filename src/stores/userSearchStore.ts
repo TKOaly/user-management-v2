@@ -1,6 +1,6 @@
 import * as Bacon from 'baconjs'
 import { actionStream } from '../actionDispatcher'
-import { userSearchFieldChangedAction } from '../actions'
+import { setSearchFilterAction, userSearchFieldChangedAction } from '../actions'
 import {
   searchUsers,
   UserServiceUser,
@@ -8,17 +8,81 @@ import {
 } from '../services/tkoUserService'
 import { none } from 'fp-ts/Option'
 
-export const userSearchStore = (initialProps: UserServiceUser[]) => {
-  const userSearchFieldChangedS = actionStream(userSearchFieldChangedAction)
+export type SearchFilter =
+  | 'filter:members'
+  | 'filter:members_paid'
+  | 'filter:members_!paid'
+  | 'filter:users_awaitaccept'
+  | 'filter:members_dismissed'
 
-  const userSearchResultS = userSearchFieldChangedS
+export const filters: Array<{ displayName: string; type: SearchFilter }> = [
+  {
+    displayName: 'Members',
+    type: 'filter:members',
+  },
+  {
+    displayName: 'Paid members',
+    type: 'filter:members_paid',
+  },
+  {
+    displayName: 'Unpaid members',
+    type: 'filter:members_!paid',
+  },
+  {
+    displayName: 'Users awaiting membership acception',
+    type: 'filter:users_awaitaccept',
+  },
+  {
+    displayName: 'Dismissed',
+    type: 'filter:members_dismissed',
+  },
+]
+
+type State = {
+  users: UserServiceUser[]
+  searchTerm: string
+  filter?: SearchFilter
+}
+
+export const userSearchStore = (initialProps: State) => {
+  const userSearchFieldChangedP = actionStream(
+    userSearchFieldChangedAction
+  ).toProperty('')
+  const setSearchFiltersP = actionStream(setSearchFilterAction).toProperty(null)
+
+  const newSearchTermWithFilterS = Bacon.combineAsArray(
+    userSearchFieldChangedP,
+    setSearchFiltersP
+  )
+    .map(([searchTerm, filter]) => ({
+      searchTerm,
+      filter: filter as SearchFilter,
+    }))
+    .toEventStream()
+
+  const userSearchResultS = newSearchTermWithFilterS
     .debounce(300)
     .flatMapLatest(doSearch)
+    .toEventStream()
 
-  return Bacon.update(initialProps, [
-    userSearchResultS,
-    (_, newValue) => newValue,
-  ])
+  return Bacon.update(
+    initialProps,
+    [
+      userSearchResultS,
+      (state: State, newValue: UserServiceUser[]) => ({
+        ...state,
+        users: newValue,
+      }),
+    ],
+    [
+      newSearchTermWithFilterS,
+      (state: State, { searchTerm, filter }) => ({
+        ...state,
+        searchTerm,
+        filter,
+      }),
+    ]
+  )
 }
 
 const doCondSearch = (additionalSearchTerm: string) => (cond: string) =>
@@ -28,15 +92,17 @@ const doCondSearch = (additionalSearchTerm: string) => (cond: string) =>
       .then(res => res.filter(applySearchFilter(additionalSearchTerm)))
   )
 
-const doSearch = (searchTerm: string) => {
-  const filter = searchTerm.startsWith('filter:')
-
+const doSearch = ({
+  searchTerm,
+  filter,
+}: {
+  searchTerm: string
+  filter?: SearchFilter
+}) => {
   if (filter) {
-    const [filterType, ...additionSerchTerm] = searchTerm.split(' ')
+    const withSearchTerm = doCondSearch(searchTerm)
 
-    const withSearchTerm = doCondSearch(additionSerchTerm.join(' '))
-
-    switch (filterType) {
+    switch (filter) {
       case 'filter:members':
         return withSearchTerm('member')
       case 'filter:members_paid':

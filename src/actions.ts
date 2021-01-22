@@ -3,6 +3,7 @@ import { UserServiceUser } from './services/tkoUserService'
 import { PaymentType } from './fixtures/paymentTypes'
 import { UpdatePaymentActionData } from './features/components/EditUserModal'
 import { UserMembershipPaymentFormState } from './stores/createUserStore'
+import { SearchFilter } from './stores/userSearchStore'
 
 export const userSearchFieldChangedAction: Action<string> =
   'userSearchFieldChanged'
@@ -21,3 +22,4 @@ export const setUserMembershipPaymentFormStateAction: Action<UserMembershipPayme
   'setUserMembershipPaymentFormState'
 export const createUserMembershipPaymentAction: Action<void> =
   'createUserMembershipPayment'
+export const setSearchFilterAction: Action<SearchFilter> = 'setSearchFilter'

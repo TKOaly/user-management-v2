@@ -2,8 +2,6 @@ import React from 'react'
 import * as Bacon from 'baconjs'
 import { UserServiceUser } from '../services/tkoUserService'
 import NavBar from './components/NavBar'
-import UserSearchBar from './components/UserSearchBar'
-//mport { userSearchStore } from '../stores/userSearchStore'
 import UsersList from './components/UsersList'
 import { onPath, watchPageChanges } from '../router'
 import EditUserModal from './components/EditUserModal'
@@ -18,10 +16,15 @@ import createUserStore, {
   PaymentCreationStatus,
 } from '../stores/createUserStore'
 import { Option, none } from 'fp-ts/Option'
+import { SearchFilter } from '../stores/userSearchStore'
 
 export interface AppProps {
   user: UserServiceUser | null
-  userSearchState: UserServiceUser[]
+  userSearchState: {
+    users: UserServiceUser[]
+    searchTerm: string
+    filter: SearchFilter
+  }
   navigation: {
     path: string
   }
@@ -36,14 +39,13 @@ export interface AppProps {
   }
 }
 
-const adminTools = (users: UserServiceUser[]) => {
-  return (
-    <>
-      <UserSearchBar />
-      <UsersList initialUsers={users} />
-    </>
-  )
-}
+const adminTools = ({
+  users,
+  searchTerm,
+}: {
+  users: UserServiceUser[]
+  searchTerm: string
+}) => <UsersList initialUsers={users} initialSearchTerm={searchTerm} />
 
 const App = ({
   userSearchState,
@@ -53,7 +55,6 @@ const App = ({
   createUserState,
 }: AppProps) => {
   const pathCheck = onPath(navigation.path)
-
   return (
     <>
       <NavBar user={user} />

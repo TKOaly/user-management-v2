@@ -20,7 +20,11 @@ export const resolveInitialState = async (
   if (!me)
     return {
       user: null,
-      userSearchState: [],
+      userSearchState: {
+        users: [],
+        searchTerm: '',
+        filter: undefined,
+      },
       navigation: {
         path,
       },
@@ -49,7 +53,11 @@ export const resolveInitialState = async (
 
   return {
     user: me,
-    userSearchState: userList,
+    userSearchState: {
+      users: userList,
+      searchTerm: '',
+      filter: undefined,
+    },
     navigation: {
       path,
     },
