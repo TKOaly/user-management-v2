@@ -1,40 +1,52 @@
 import React from 'react'
 import { dispatch } from '../../actionDispatcher'
-import { userSearchFieldChangedAction } from '../../actions'
+import {
+  setSearchFilterAction,
+  userSearchFieldChangedAction,
+} from '../../actions'
+import { filters, SearchFilter } from '../../stores/userSearchStore'
 
-export default () => (
-  <div className="user-serach-box">
-    <h3>Search filters:</h3>
-    <p>Empty search term lists all users.</p>
-    <p>Start the search term with filter:[filter from the list below].</p>
-    <ul>
-      <li>
-        <strong>members</strong>
-        <p>Only members.</p>
-      </li>
-      <li>
-        <strong>members_paid</strong>
-        <p>Members with valid membership payments.</p>
-      </li>
-      <li>
-        <strong>members_!paid</strong>
-        <p>Members without valid membership payments.</p>
-      </li>
-      <li>
-        <strong>users_awaitaccept</strong>
-        <p>Users awaiting acception</p>
-      </li>
-      <li>
-        <strong>members_dismissed</strong>
-        <p>Dismissed members</p>
-      </li>
-    </ul>
-    <strong></strong>
-    <input
-      className="input search-users-input"
-      type="text"
-      placeholder="Search for users..."
-      onChange={e => dispatch(userSearchFieldChangedAction, e.target.value)}
-    />
-  </div>
-)
+export default ({
+  searchTerm,
+  filter,
+}: {
+  searchTerm: string
+  filter: SearchFilter
+}) => {
+  return (
+    <div className="user-serach-box">
+      <div className="field has-addons">
+        <p className="control">
+          <span className="select">
+            <select
+              onChange={e => dispatch(setSearchFilterAction, e.target.value)}
+            >
+              {filters.map(({ displayName, type }) => (
+                <option value={type} selected={filter === type}>
+                  {displayName}
+                </option>
+              ))}
+            </select>
+          </span>
+        </p>
+        <p className="control is-expanded">
+          <input
+            className="input search-users-input"
+            type="text"
+            placeholder="Search for users..."
+            value={searchTerm}
+            onChange={e =>
+              dispatch(userSearchFieldChangedAction, e.target.value)
+            }
+          />
+        </p>
+      </div>
+      <span
+        className="tag is-danger is-light filter-tag"
+        onClick={() => dispatch(setSearchFilterAction, null)}
+      >
+        Clear filters
+      </span>
+    </div>
+  )
+}

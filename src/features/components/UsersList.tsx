@@ -5,6 +5,7 @@ import { useStore } from '../../utils/baconReactUtils'
 import { userSearchStore } from '../../stores/userSearchStore'
 import { UserServiceUser } from '../../services/tkoUserService'
 import ScrollAwareContainer from './ScrollAwareContainer'
+import UserSearchBar from './UserSearchBar'
 
 function renderItem(user: UserServiceUser) {
   return (
@@ -20,15 +21,27 @@ function renderItem(user: UserServiceUser) {
   )
 }
 
-export default ({ initialUsers }: { initialUsers: UserServiceUser[] }) => {
-  const users = useStore(userSearchStore, initialUsers)
+export default ({
+  initialUsers,
+  initialSearchTerm,
+}: {
+  initialUsers: UserServiceUser[]
+  initialSearchTerm: string
+}) => {
+  const { users, searchTerm, filter } = useStore(userSearchStore, {
+    users: initialUsers,
+    searchTerm: initialSearchTerm,
+  })
   return (
-    <div className="panel">
-      <ScrollAwareContainer
-        items={users}
-        itemsPerPage={20}
-        renderFn={renderItem}
-      ></ScrollAwareContainer>
-    </div>
+    <>
+      <UserSearchBar searchTerm={searchTerm} filter={filter} />
+      <div className="panel">
+        <ScrollAwareContainer
+          items={users}
+          itemsPerPage={20}
+          renderFn={renderItem}
+        ></ScrollAwareContainer>
+      </div>
+    </>
   )
 }

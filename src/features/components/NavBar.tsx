@@ -10,7 +10,7 @@ export default (props: NavBarProps) => {
   return (
     <nav className="navbar">
       <div className="navbar-brand">
-        <img width="50" src="/assets/img/tkoaly_logo.png" />
+        <img width="50" height="50" src="/assets/img/tkoaly_logo.png" />
         <p className="rainbow-text animated">usr mngmnt poc :-)</p>
 
         <a

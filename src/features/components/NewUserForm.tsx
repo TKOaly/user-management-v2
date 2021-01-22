@@ -175,7 +175,7 @@ export default ({
       </div>
     </div>
     <div className="field">
-      <label className="label">Residence</label>
+      <label className="label">City of residence</label>
       <div className="control">
         <input
           className="input"
@@ -229,8 +229,8 @@ export default ({
           name="rsvp"
           onChange={updateRadioFormData('fullMember')}
         />
-        I'm seeking to become a full member and I study or have studied computer
-        science.
+        I'm seeking to become a <b>full member</b> and I study or have studied
+        computer science.
       </label>
       <label className="radio">
         <input
@@ -238,8 +238,8 @@ export default ({
           name="rsvp"
           onChange={updateRadioFormData('outsideMember')}
         />
-        I'm seeking to become a outside members and I am a member of HYY or
-        University of Helsinki staff.
+        I'm seeking to become a <b>outside member</b> and I am a member of HYY
+        or University of Helsinki staff.
       </label>
       <label className="radio">
         <input
@@ -247,7 +247,7 @@ export default ({
           name="rsvp"
           onChange={updateRadioFormData('supportingMember')}
         />
-        I'm seeking to become a supporting member.
+        I'm seeking to become a <b>supporting member</b>.
       </label>
     </div>
     <label className="checkbox">

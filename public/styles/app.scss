@@ -19,21 +19,14 @@
 
 .control {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .radio {
-  transition: background-color 0.1s linear;
-  input {
-    margin: 5px;
-  }
+  margin: 10px 0px 10px 0px;
 
-  &:hover {
-    background-color: #48c774;
-  }
-
-  &.active {
-    background-color: #48c774;
+  & + .radio {
+    margin: 10px 0px 10px 0px;
   }
 }
 
@@ -42,7 +35,7 @@
   color: #f14668;
 }
 
-input[type="checkbox"] {
+input[type='checkbox'] {
   margin-right: 10px;
 }
 
@@ -116,10 +109,19 @@ input[type="checkbox"] {
   animation-delay: -1.6s;
 }
 @keyframes lds-grid {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
     opacity: 0.5;
   }
+}
+
+.search-filters {
+  margin: 5px;
+}
+
+.filter-tag {
+  margin: 2px;
 }

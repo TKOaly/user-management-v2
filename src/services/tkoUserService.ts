@@ -49,7 +49,7 @@ export interface Payment {
   id: number
   amount: string
   confirmer_id: number | null
-  membership_applied_for: 'full member'
+  membership_applied_for: string
   paid: string | null
   payer_id: number
   payment_type: string
