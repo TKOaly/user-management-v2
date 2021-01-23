@@ -7,7 +7,9 @@ import { UserServiceUser } from '../../services/tkoUserService'
 import ScrollAwareContainer from './ScrollAwareContainer'
 import UserSearchBar from './UserSearchBar'
 
-function renderItem(user: UserServiceUser) {
+const renderItem = (showMembershipAppliedFor?: boolean) => (
+  user: UserServiceUser
+) => {
   return (
     <a
       className="panel-block is-active"
@@ -17,6 +19,9 @@ function renderItem(user: UserServiceUser) {
         <i className="fas fa-user" aria-hidden="true"></i>
       </span>
       {user.name}
+      {showMembershipAppliedFor && (
+        <strong>(applied for {user.membershipAppliedFor})</strong>
+      )}
     </a>
   )
 }
@@ -39,7 +44,7 @@ export default ({
         <ScrollAwareContainer
           items={users}
           itemsPerPage={20}
-          renderFn={renderItem}
+          renderFn={renderItem(filter === 'filter:users_awaitaccept')}
         ></ScrollAwareContainer>
       </div>
     </>

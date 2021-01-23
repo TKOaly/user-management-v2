@@ -35,6 +35,7 @@ export interface UserServiceUser {
   isDeleted: boolean
   isHyStaff: boolean
   isHyStudent: boolean
+  membershipAppliedFor?: string
 }
 
 export interface CreatePaymentBody {

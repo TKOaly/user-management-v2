@@ -63,6 +63,7 @@ export const userSearchStore = (initialProps: State) => {
   const userSearchResultS = newSearchTermWithFilterS
     .debounce(300)
     .flatMapLatest(doSearch)
+    .flatMapError(() => [])
     .toEventStream()
 
   return Bacon.update(
